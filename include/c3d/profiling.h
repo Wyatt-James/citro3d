@@ -31,15 +31,15 @@ typedef enum
 
 /*
 	Sets the profiler function to use, or NULL to disable.
-	This function must accept any valid u8 as its slot ID.
+	This function must accept any valid u32 as its slot ID.
 */ 
-void C3D_ProfilerFunc(void (*profiling_func)(uint8_t));
+void C3D_ProfilerFunc(void (*profiling_func)(uint32_t));
 
 // Sets the category mapping for a C3D_LogSlot.
-void C3D_ProfilerCategoryMapping(C3D_LogSlot log_slot, uint8_t profiling_category);
+void C3D_ProfilerCategoryMapping(C3D_LogSlot log_slot, uint32_t profiling_category);
 
 // Enables or disables a profiling category.
 void C3D_ProfilingCategoryEnable(C3D_LogSlot slot, bool enabled);
 
 // A convenience function that initializes all profiler categories sequentially (inclusive)
-void C3D_ProfilerCategoriesInit(uint8_t from);
+void C3D_ProfilerCategoriesInit(uint32_t from);

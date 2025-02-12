@@ -27,7 +27,7 @@ typedef struct
 
 typedef struct
 {
-	void (*profiling_func)(uint8_t category);
+	void (*profiling_func)(uint32_t category);
 	C3D_ProfilerSlot log_settings[C3D_LogSlot_Count];
 	C3D_LogSlot current_block_category;
 	bool log_slot_skipped;
