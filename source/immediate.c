@@ -4,6 +4,8 @@ void C3D_ImmDrawBegin(GPU_Primitive_t primitive)
 {
 	C3Di_UpdateContext();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_ImmediateDraw);
+
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);
 	// Start a new primitive (breaks off a triangle strip/fan)
@@ -16,6 +18,8 @@ void C3D_ImmDrawBegin(GPU_Primitive_t primitive)
 	GPUCMD_AddMaskedWrite(GPUREG_START_DRAW_FUNC0, 1, 0);
 	// Begin immediate-mode vertex submission
 	GPUCMD_AddWrite(GPUREG_FIXEDATTRIB_INDEX, 0xF);
+	
+	C3Di_Profile_Exit_Block();
 }
 
 static inline void write24(u8* p, u32 val)

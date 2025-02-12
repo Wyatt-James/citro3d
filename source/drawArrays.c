@@ -4,6 +4,8 @@ void C3D_DrawArrays(GPU_Primitive_t primitive, int first, int size)
 {
 	C3Di_UpdateContext();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_DrawArrays);
+
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);
 	// Start a new primitive (breaks off a triangle strip/fan)
@@ -28,4 +30,6 @@ void C3D_DrawArrays(GPU_Primitive_t primitive, int first, int size)
 	GPUCMD_AddWrite(GPUREG_VTX_FUNC, 1);
 
 	C3Di_GetContext()->flags |= C3DiF_DrawUsed;
+
+	C3Di_Profile_Exit_Block();
 }

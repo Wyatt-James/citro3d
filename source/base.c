@@ -3,6 +3,7 @@
 #include <c3d/base.h>
 #include <c3d/effect.h>
 #include <c3d/uniforms.h>
+#include <c3d/profiling.h>
 
 C3D_Context __C3D_Context;
 
@@ -154,6 +155,13 @@ bool C3Di_Init(size_t cmdBufSize, size_t gxQueueSize, bool doubleBuf)
 	
 	aptHook(&hookCookie, C3Di_AptEventHook, NULL);
 
+	// Reset profiling functions
+	C3D_ProfilerFunc(NULL);
+	for (i = 0; i < C3D_LogSlot_Count; i++) {
+		C3D_ProfilerCategoryMapping(i, 0);
+		C3D_ProfilingCategoryEnable(i, false);
+	}
+
 	return true;
 }
 
@@ -191,9 +199,13 @@ void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u32 bott
 
 void C3Di_UpdateContext(void)
 {
+	C3Di_GetProfiler()->log_slot_skipped = false;
+	C3Di_Profile(C3D_LogSlot_Default);
+
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_FrameBuf);
 	if (ctx->flags & C3DiF_FrameBuf)
 	{
 		ctx->flags &= ~C3DiF_FrameBuf;
@@ -205,44 +217,58 @@ void C3Di_UpdateContext(void)
 		}
 		C3Di_FrameBufBind(&ctx->fb);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_Viewport);
 	if (ctx->flags & C3DiF_Viewport)
 	{
 		ctx->flags &= ~C3DiF_Viewport;
 		GPUCMD_AddIncrementalWrites(GPUREG_VIEWPORT_WIDTH, ctx->viewport, 4);
 		GPUCMD_AddWrite(GPUREG_VIEWPORT_XY, ctx->viewport[4]);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_Scissor);
 	if (ctx->flags & C3DiF_Scissor)
 	{
 		ctx->flags &= ~C3DiF_Scissor;
 		GPUCMD_AddIncrementalWrites(GPUREG_SCISSORTEST_MODE, ctx->scissor, 3);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_Program);
 	if (ctx->flags & C3DiF_Program)
 	{
 		shaderProgramConfigure(ctx->program, (ctx->flags & C3DiF_VshCode) != 0, (ctx->flags & C3DiF_GshCode) != 0);
 		ctx->flags &= ~(C3DiF_Program | C3DiF_VshCode | C3DiF_GshCode);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_AttrInfo);
 	if (ctx->flags & C3DiF_AttrInfo)
 	{
 		ctx->flags &= ~C3DiF_AttrInfo;
 		C3Di_AttrInfoBind(&ctx->attrInfo);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_BufInfo);
 	if (ctx->flags & C3DiF_BufInfo)
 	{
 		ctx->flags &= ~C3DiF_BufInfo;
 		C3Di_BufInfoBind(&ctx->bufInfo);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_Effect);
 	if (ctx->flags & C3DiF_Effect)
 	{
 		ctx->flags &= ~C3DiF_Effect;
 		C3Di_EffectBind(&ctx->effect);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_TexAll);
 	if (ctx->flags & C3DiF_TexAll)
 	{
 		u32 units = 0;
@@ -262,7 +288,9 @@ void C3Di_UpdateContext(void)
 		ctx->flags &= ~C3DiF_TexAll;
 		ctx->flags |= C3DiF_TexStatus;
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_TexStatus);
 	if (ctx->flags & C3DiF_TexStatus)
 	{
 		ctx->flags &= ~C3DiF_TexStatus;
@@ -275,10 +303,16 @@ void C3Di_UpdateContext(void)
 		}
 		GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_ProcTex);
 	if (ctx->flags & (C3DiF_ProcTex | C3DiF_ProcTexColorLut | C3DiF_ProcTexLutAll))
+	{
 		C3Di_ProcTexUpdate(ctx);
+	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_TexEnvBuf);
 	if (ctx->flags & C3DiF_TexEnvBuf)
 	{
 		ctx->flags &= ~C3DiF_TexEnvBuf;
@@ -286,7 +320,9 @@ void C3Di_UpdateContext(void)
 		GPUCMD_AddWrite(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr);
 		GPUCMD_AddWrite(GPUREG_FOG_COLOR, ctx->fogClr);
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_FogLut);
 	if ((ctx->flags & C3DiF_FogLut) && (ctx->texEnvBuf&7) != GPU_NO_FOG)
 	{
 		ctx->flags &= ~C3DiF_FogLut;
@@ -296,10 +332,14 @@ void C3Di_UpdateContext(void)
 			GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
 		}
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_Gas);
 	if ((ctx->texEnvBuf&7) == GPU_GAS)
 		C3Di_GasUpdate(ctx);
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_TexEnvAll);
 	if (ctx->flags & C3DiF_TexEnvAll)
 	{
 		for (i = 0; i < 6; i ++)
@@ -309,20 +349,26 @@ void C3Di_UpdateContext(void)
 		}
 		ctx->flags &= ~C3DiF_TexEnvAll;
 	}
+	C3Di_Profile_Exit_Block();
 
-	C3D_LightEnv* env = ctx->lightEnv;
-
-	if (ctx->flags & C3DiF_LightEnv)
+	C3Di_Profile_Enter_Block(C3D_LogSlot_LightEnv);
 	{
-		u32 enable = env != NULL;
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, enable);
-		GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1, !enable);
-		ctx->flags &= ~C3DiF_LightEnv;
+		C3D_LightEnv* env = ctx->lightEnv;
+
+		if (ctx->flags & C3DiF_LightEnv)
+		{
+			u32 enable = env != NULL;
+			GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, enable);
+			GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1, !enable);
+			ctx->flags &= ~C3DiF_LightEnv;
+		}
+
+		if (env)
+			C3Di_LightEnvUpdate(env);
 	}
+	C3Di_Profile_Exit_Block(C3D_LogSlot_LightEnv);
 
-	if (env)
-		C3Di_LightEnvUpdate(env);
-
+	C3Di_Profile_Enter_Block(C3D_LogSlot_FixedAttribDirty);
 	if (ctx->fixedAttribDirty)
 	{
 		for (i = 0; i < 12; i ++)
@@ -335,9 +381,12 @@ void C3Di_UpdateContext(void)
 		}
 		ctx->fixedAttribDirty = 0;
 	}
+	C3Di_Profile_Exit_Block();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_UpdateUniforms);
 	C3D_UpdateUniforms(GPU_VERTEX_SHADER);
 	C3D_UpdateUniforms(GPU_GEOMETRY_SHADER);
+	C3Di_Profile_Exit_Block();
 }
 
 bool C3Di_SplitFrame(u32** pBuf, u32* pSize)

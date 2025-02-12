@@ -9,6 +9,8 @@ void C3D_DrawElements(GPU_Primitive_t primitive, int count, int type, const void
 
 	C3Di_UpdateContext();
 
+	C3Di_Profile_Enter_Block(C3D_LogSlot_DrawElements);
+
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive != GPU_TRIANGLES ? primitive : GPU_GEOMETRY_PRIM);
 	// Start a new primitive (breaks off a triangle strip/fan)
@@ -43,4 +45,6 @@ void C3D_DrawElements(GPU_Primitive_t primitive, int count, int type, const void
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 0x8, 0);
 
 	C3Di_GetContext()->flags |= C3DiF_DrawUsed;
+	
+	C3Di_Profile_Exit_Block();
 }
