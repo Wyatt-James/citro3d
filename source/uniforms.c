@@ -19,8 +19,6 @@ static struct
 static bool C3Di_FVUnifEverDirty[2][C3D_FVUNIF_COUNT];
 static bool C3Di_IVUnifEverDirty[2][C3D_IVUNIF_COUNT];
 
-void* test_ptr;
-
 void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 {
 	int offset = type == GPU_GEOMETRY_SHADER ? (GPUREG_GSH_BOOLUNIFORM-GPUREG_VSH_BOOLUNIFORM) : 0;
@@ -55,7 +53,6 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		// Upload the uniforms
 		GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000|i);
 		GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*)&C3D_FVUnif[type][i], (j-i)*4);
-		test_ptr = GPU_TEST_FUNC();
 
 		// Clear the dirty flag
 		int k;
