@@ -3,7 +3,7 @@
 #include <c3d/base.h>
 #include <c3d/effect.h>
 #include <c3d/uniforms.h>
-#include <c3d/profiling.h>
+#include <c3d/profiler.h>
 
 C3D_Context __C3D_Context;
 
@@ -155,12 +155,10 @@ bool C3Di_Init(size_t cmdBufSize, size_t gxQueueSize, bool doubleBuf)
 	
 	aptHook(&hookCookie, C3Di_AptEventHook, NULL);
 
-	// Reset profiling functions
+	// Reset profiler functions
 	C3D_ProfilerFunc(NULL);
-	for (i = 0; i < C3D_LogSlot_Count; i++) {
-		C3D_ProfilerCategoryMapping(i, 0);
-		C3D_ProfilingCategoryEnable(i, false);
-	}
+	C3D_ProfilerCategoryClearAll(0);
+	C3D_ProfilerCategoryEnableAll(false);
 
 	return true;
 }

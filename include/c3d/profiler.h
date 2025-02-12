@@ -23,9 +23,9 @@ typedef enum
 	C3D_LogSlot_LightEnv,            // C3DiF
 	C3D_LogSlot_FixedAttribDirty,    // 
 	C3D_LogSlot_UpdateUniforms,      // End of C3Di_UpdateContext
-	C3D_LogSlot_ImmediateDraw,      // End of C3Di_UpdateContext
-	C3D_LogSlot_DrawArrays,      // End of C3Di_UpdateContext
-	C3D_LogSlot_DrawElements,      // End of C3Di_UpdateContext
+	C3D_LogSlot_ImmediateDraw,       // End of C3Di_UpdateContext
+	C3D_LogSlot_DrawArrays,          // End of C3Di_UpdateContext
+	C3D_LogSlot_DrawElements,        // End of C3Di_UpdateContext
 	C3D_LogSlot_Count                // Number of log slots
 } C3D_LogSlot;
 
@@ -36,10 +36,22 @@ typedef enum
 void C3D_ProfilerFunc(void (*profiling_func)(uint32_t));
 
 // Sets the category mapping for a C3D_LogSlot.
-void C3D_ProfilerCategoryMapping(C3D_LogSlot log_slot, uint32_t profiling_category);
+void C3D_ProfilerCategoryMap(C3D_LogSlot log_slot, uint32_t profiling_category);
 
 // Enables or disables a profiling category.
 void C3D_ProfilingCategoryEnable(C3D_LogSlot slot, bool enabled);
 
-// A convenience function that initializes all profiler categories sequentially (inclusive)
-void C3D_ProfilerCategoriesInit(uint32_t from);
+// A convenience function that initializes all profiler categories sequentially, starting from the given profiling category
+void C3D_ProfilerCategoryClearAll(uint32_t clear_id);
+
+// A convenience function that initializes all profiler categories sequentially, starting from the given profiling category
+void C3D_ProfilerCategoryMapAll(uint32_t starting_id);
+
+// A convenience function that enables or disables all profiler categories
+void C3D_ProfilerCategoryEnableAll(bool enable);
+
+// A convenience function that initializes the given profiler categories, sequentially, starting from the given profiling category
+void C3D_ProfilerCategoryMapMultiple(C3D_LogSlot categories[], size_t num_categories, uint32_t starting_id);
+
+// A convenience function that enables or disables the given profiler categories
+void C3D_ProfilerCategoryEnableMultiple(C3D_LogSlot categories[], size_t num_categories, bool enable);

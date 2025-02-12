@@ -28,7 +28,7 @@ extern "C" {
 
 #include "c3d/framebuffer.h"
 #include "c3d/renderqueue.h"
-#include "c3d/profiling.h"
+#include "c3d/profiler.h"
 
 #ifdef __cplusplus
 }

@@ -7,7 +7,7 @@
 #include <c3d/framebuffer.h>
 #include <c3d/texenv.h>
 #include <c3d/fog.h>
-#include <c3d/profiling.h>
+#include <c3d/profiler.h>
 
 #define C3D_UNUSED __attribute__((unused))
 
@@ -27,7 +27,7 @@ typedef struct
 
 typedef struct
 {
-	void (*profiling_func)(uint32_t category);
+	void (*profiler_func)(uint32_t category);
 	C3D_ProfilerSlot log_settings[C3D_LogSlot_Count];
 	C3D_LogSlot current_block_category;
 	bool log_slot_skipped;
@@ -175,10 +175,10 @@ static inline bool C3Di_Profile(C3D_LogSlot category)
 {
 	C3D_Profiler* p = C3Di_GetProfiler();
     if (category < C3D_LogSlot_Count &&
-		p->profiling_func != NULL &&
+		p->profiler_func != NULL &&
 		p->log_settings[category].enabled)
 	{
-        p->profiling_func(p->log_settings[category].external_id);
+        p->profiler_func(p->log_settings[category].external_id);
 		return true;
 	}
 	return false;
