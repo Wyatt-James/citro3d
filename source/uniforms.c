@@ -49,7 +49,8 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		C3Di_FVUnifEverDirty[type][i] |= C3D_FVUnifDirty[type][i];
 
 	// WYATT_TODO add support for batching across word boundaries
-	for (u32 num_regs = 0, word = 0; num_regs < C3D_FVUNIF_COUNT; word++) {
+	for (u32 num_regs = 0, word = 0; num_regs < C3D_FVUNIF_COUNT; word++, num_regs += 32) {
+		u32 regs_this_word = 0;
 		u32 bits = C3D_FVUnifDirty[type][word];
 		while (bits) {
 			if (bits & 0b1) // First bit is set: dirty reg
@@ -57,15 +58,15 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 				const u32 dirty_regs = NUM_TRAILING_ONES(bits);
 				bits >>= dirty_regs;
 				
-				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | num_regs);
-				GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][num_regs], (dirty_regs - num_regs) * 4);
-				num_regs += dirty_regs;
+				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | (num_regs + regs_this_word));
+				GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][num_regs + regs_this_word], (dirty_regs - num_regs + regs_this_word) * 4);
+				regs_this_word += dirty_regs;
 			}
 			else // First bit is clear: clean reg
 			{
 				const u32 clean_regs = NUM_TRAILING_ZEROS(bits);
 				bits >>= clean_regs;
-				num_regs += clean_regs;
+				regs_this_word += clean_regs;
 			}
 		}
 	}
