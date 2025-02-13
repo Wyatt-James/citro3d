@@ -412,7 +412,8 @@ void C3Di_UpdateContext(void)
 
 	C3Di_Profile_Enter_Block(C3D_LogSlot_UpdateUniforms);
 	C3D_UpdateUniforms(GPU_VERTEX_SHADER);
-	C3D_UpdateUniforms(GPU_GEOMETRY_SHADER);
+	if (ctx->program->geometryShader != NULL)
+		C3D_UpdateUniforms(GPU_GEOMETRY_SHADER);
 	C3Di_Profile_Exit_Block();
 }
 
