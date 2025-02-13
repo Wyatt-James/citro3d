@@ -55,8 +55,11 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 				const u32 dirty_regs = NUM_TRAILING_ONES(bits);
 				bits >>= dirty_regs;
 				
-				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | (num_regs + regs_this_word));
-				GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][num_regs + regs_this_word], (dirty_regs - num_regs + regs_this_word) * 4);
+				const u32 first_dirty = num_regs + regs_this_word;
+				const u32 next_clean = first_dirty + dirty_regs;
+				
+				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | first_dirty);
+				GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][first_dirty], (next_clean - first_dirty) * 4);
 				regs_this_word += dirty_regs;
 			}
 			else // First bit is clear: clean reg
