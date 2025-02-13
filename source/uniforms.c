@@ -3,10 +3,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-// #define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or undefined if there are none
-// #define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or undefined if there are none
-#define NUM_TRAILING_ONES(val_)  (__builtin_ffsl(val_) - 1)    // number of trailing 1-bits, or undefined if there are none
-#define NUM_TRAILING_ZEROS(val_) (__builtin_ffsl(~(val_)) - 1) // number of trailing 0-bits, or undefined if there are none
+#define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or undefined if there are none
+#define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or undefined if there are none
+// #define NUM_TRAILING_ONES(val_)  (__builtin_ffsl(val_) - 1)    // number of trailing 1-bits, or undefined if there are none
+// #define NUM_TRAILING_ZEROS(val_) (__builtin_ffsl(~(val_)) - 1) // number of trailing 0-bits, or undefined if there are none
 
 C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
 C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
