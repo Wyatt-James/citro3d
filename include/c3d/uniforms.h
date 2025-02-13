@@ -23,14 +23,17 @@ static inline void C3D_RegDirty(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	const u32 lowest_word = id / 32;
 	const u32 highest_word = (id + size - 1) / 32;
 
-	for (u32 w = lowest_word; w <= highest_word; w++) {
-		if (w == lowest_word)
-			bitfield[w] |= C3D_SET_MSB(u32, id - w * 32);   // Set upper bits of lowest word
-		else if (w == highest_word)
-			bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
-		else
-			bitfield[w] = ~0;                           // Fill intermediate words completely
-	}
+	if (lowest_word == highest_word)
+		bitfield[lowest_word] |= (C3D_SET_LSB(size) << id);
+	else
+		for (u32 w = lowest_word; w <= highest_word; w++) {
+			if (w == lowest_word)
+				bitfield[w] |= C3D_SET_MSB(u32, id - w * 32);   // Set upper bits of lowest word
+			else if (w == highest_word)
+				bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
+			else
+				bitfield[w] = ~0;                           // Fill intermediate words completely
+		}
 }
 
 // Marks the given registers in the bitfield as clean
@@ -39,14 +42,17 @@ static inline void C3D_RegClean(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	const u32 lowest_word = id / 32;
 	const u32 highest_word = (id + size - 1) / 32;
 
-	for (u32 w = lowest_word; w <= highest_word; w++) {
-		if (w == lowest_word)
-			bitfield[w] &= ~C3D_SET_MSB(u32, id - w * 32);   // Clear upper bits of lowest word
-		else if (w == highest_word)
-			bitfield[w] &= ~C3D_SET_LSB(id + size - w * 32); // Clear lower bits of highest word
-		else
-			bitfield[w] = 0;                             // Zero intermediate words completely
-	}
+	if (lowest_word == highest_word)
+		bitfield[lowest_word] &= ~(C3D_SET_LSB(size) << id);
+	else
+		for (u32 w = lowest_word; w <= highest_word; w++) {
+			if (w == lowest_word)
+				bitfield[w] &= ~C3D_SET_MSB(u32, id - w * 32);   // Clear upper bits of lowest word
+			else if (w == highest_word)
+				bitfield[w] &= ~C3D_SET_LSB(id + size - w * 32); // Clear lower bits of highest word
+			else
+				bitfield[w] = 0;                             // Zero intermediate words completely
+		}
 }
 
 static inline C3D_FVec* C3D_FVUnifWritePtr(GPU_SHADER_TYPE type, int id, int size)
