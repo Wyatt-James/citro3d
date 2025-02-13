@@ -45,9 +45,6 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	}
 
 	// Update FVec uniforms
-	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i++)
-		C3Di_FVUnifEverDirty[type][i] |= C3D_FVUnifDirty[type][i];
-
 	// WYATT_TODO add support for batching across word boundaries
 	for (u32 num_regs = 0, word = 0; num_regs < C3D_FVUNIF_COUNT; word++, num_regs += 32) {
 		u32 regs_this_word = 0;
@@ -71,7 +68,11 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		}
 	}
 
-	memset(&C3D_FVUnifDirty[type][0], 0, sizeof(C3D_FVUnifDirty[type]));
+	// Clear the dirty flags
+	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i++) {
+		C3Di_FVUnifEverDirty[type][i] |= C3D_FVUnifDirty[type][i];
+		C3D_FVUnifDirty[type][i] = 0;
+	}
 
 	// Update IVec uniforms
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
