@@ -52,9 +52,7 @@ static inline void C3Di_Profile(C3D_ProfilerSlot category)
 		p->log_settings[category].enabled)
 	{
         p->profiler_func(p->log_settings[category].external_id);
-		return true;
 	}
-	return false;
 }
 
 // Call to begin a profiler block
