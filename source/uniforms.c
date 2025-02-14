@@ -45,7 +45,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 
 	// Update FVec uniforms
 	// WYATT_TODO add support for batching across word boundaries
-	for (u32 num_regs = 0, word = 0; num_regs < C3D_FVUNIF_COUNT; word++, num_regs += 32) {
+	for (u32 word = 0; word < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; word++) {
 		u32 regs_this_word = 0;
 		u32 bits = C3D_FVUnifDirty[type][word];
 		while (bits) {
@@ -54,7 +54,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 				const u32 dirty_regs = NUM_TRAILING_ONES(bits);
 				bits >>= dirty_regs;
 				
-				const u32 first_dirty = num_regs + regs_this_word;
+				const u32 first_dirty = (word * 32) + regs_this_word;
 				const u32 next_clean = first_dirty + dirty_regs;
 				
 				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | first_dirty);
