@@ -1,6 +1,7 @@
 #pragma once
 #include "maths.h"
 #include <stdint.h>
+#include <c3d/wyatt_dbg.h>
 
 #define C3D_FVUNIF_COUNT 96
 #define C3D_IVUNIF_COUNT 4
