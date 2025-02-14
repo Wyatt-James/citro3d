@@ -200,14 +200,16 @@ void C3Di_UpdateContext(void)
 	C3Di_GetProfiler()->log_slot_skipped = false;
 	C3Di_Profile(C3D_ProfilerSlot_Misc);
 
+
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
+	u32 flags = ctx->flags;
 
-	if (ctx->flags & C3DiF_FrameBuf)
+	if (flags & C3DiF_FrameBuf)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_FrameBuf);
 
-		if (ctx->flags & C3DiF_DrawUsed)
+		if (flags & C3DiF_DrawUsed)
 		{
 			GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
 			GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
@@ -217,7 +219,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_Viewport)
+	if (flags & C3DiF_Viewport)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Viewport);
 
@@ -227,7 +229,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_Scissor)
+	if (flags & C3DiF_Scissor)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Scissor);
 
@@ -236,16 +238,16 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_Program)
+	if (flags & C3DiF_Program)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Program);
 		
-		shaderProgramConfigure(ctx->program, (ctx->flags & C3DiF_VshCode) != 0, (ctx->flags & C3DiF_GshCode) != 0);
+		shaderProgramConfigure(ctx->program, (flags & C3DiF_VshCode) != 0, (flags & C3DiF_GshCode) != 0);
 
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_AttrInfo)
+	if (flags & C3DiF_AttrInfo)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_AttrInfo);
 
@@ -254,7 +256,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_BufInfo)
+	if (flags & C3DiF_BufInfo)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_BufInfo);
 
@@ -263,7 +265,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_Effect)
+	if (flags & C3DiF_Effect)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Effect);
 
@@ -272,7 +274,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_TexAll)
+	if (flags & C3DiF_TexAll)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexAll);
 
@@ -282,7 +284,7 @@ void C3Di_UpdateContext(void)
 			if (ctx->tex[i])
 			{
 				units |= BIT(i);
-				if (ctx->flags & C3DiF_Tex(i))
+				if (flags & C3DiF_Tex(i))
 					C3Di_SetTex(i, ctx->tex[i]);
 			}
 		}
@@ -290,12 +292,12 @@ void C3Di_UpdateContext(void)
 		// Enable texture units and clear texture cache
 		ctx->texConfig &= ~7;
 		ctx->texConfig |= units | BIT(16);
-		ctx->flags |= C3DiF_TexStatus;
+		flags |= C3DiF_TexStatus;
 
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_TexStatus)
+	if (flags & C3DiF_TexStatus)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexStatus);
 
@@ -311,14 +313,14 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & (C3DiF_ProcTex | C3DiF_ProcTexColorLut | C3DiF_ProcTexLutAll))
+	if (flags & (C3DiF_ProcTex | C3DiF_ProcTexColorLut | C3DiF_ProcTexLutAll))
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_ProcTex);
 		C3Di_ProcTexUpdate(ctx);
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_TexEnvBuf)
+	if (flags & C3DiF_TexEnvBuf)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexEnvBuf);
 
@@ -329,7 +331,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if ((ctx->flags & C3DiF_FogLut) && (ctx->texEnvBuf&7) != GPU_NO_FOG)
+	if ((flags & C3DiF_FogLut) && (ctx->texEnvBuf&7) != GPU_NO_FOG)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_FogLut);
 
@@ -349,13 +351,13 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (ctx->flags & C3DiF_TexEnvAll)
+	if (flags & C3DiF_TexEnvAll)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexEnvAll);
 
 		for (i = 0; i < 6; i ++)
 		{
-			if (!(ctx->flags & C3DiF_TexEnv(i))) continue;
+			if (!(flags & C3DiF_TexEnv(i))) continue;
 			C3Di_TexEnvBind(i, &ctx->texEnv[i]);
 		}
 
@@ -365,7 +367,7 @@ void C3Di_UpdateContext(void)
 	{
 		C3D_LightEnv* env = ctx->lightEnv;
 
-		if (ctx->flags & C3DiF_LightEnv)
+		if (flags & C3DiF_LightEnv)
 		{
 			u32 enable = env != NULL;
 			if (enable) C3Di_Profile_Enter_Block(C3D_ProfilerSlot_LightEnv);
@@ -396,7 +398,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	ctx->flags &= 
+	ctx->flags &=
 		~(C3DiF_FrameBuf  |
 		  C3DiF_DrawUsed  |
 		  C3DiF_Viewport  |
