@@ -23,7 +23,6 @@ static struct
 	float24Uniform_s* data;
 } C3Di_ShaderFVecData[2];
 
-static u32  C3Di_FVUnifEverDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH];
 static bool C3Di_IVUnifEverDirty[2][C3D_IVUNIF_COUNT];
 
 void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
@@ -72,10 +71,8 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	}
 
 	// Clear the dirty flags
-	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i++) {
-		C3Di_FVUnifEverDirty[type][i] |= C3D_FVUnifDirty[type][i];
+	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i++)
 		C3D_FVUnifDirty[type][i] = 0;
-	}
 
 	// Update IVec uniforms
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
@@ -102,7 +99,7 @@ void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 	if (C3Di_ShaderFVecData[type].count)
 		C3Di_ShaderFVecData[type].dirty = true;
 	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i ++)
-		C3D_FVUnifDirty[type][i] |= C3Di_FVUnifEverDirty[type][i];
+		C3D_FVUnifDirty[type][i] = ~0;
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
 }
