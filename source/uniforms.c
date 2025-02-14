@@ -1,5 +1,4 @@
 #include "internal.h"
-#include <c3d/wyatt_dbg.h>
 #include <c3d/uniforms.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -103,12 +102,6 @@ void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 		C3D_FVUnifDirty[type][i] = ~0;
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
-}
-
-
-void C3D_DirtyUniforms(GPU_SHADER_TYPE type)
-{
-	C3Di_DirtyUniforms(type);
 }
 
 void C3Di_LoadShaderUniforms(shaderInstance_s* si)
