@@ -200,10 +200,9 @@ void C3Di_UpdateContext(void)
 	C3Di_GetProfiler()->log_slot_skipped = false;
 	C3Di_Profile(C3D_ProfilerSlot_Misc);
 
-
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
-	u32 flags = ctx->flags;
+	const u32 flags = ctx->flags;
 
 	if (flags & C3DiF_FrameBuf)
 	{
@@ -292,12 +291,12 @@ void C3Di_UpdateContext(void)
 		// Enable texture units and clear texture cache
 		ctx->texConfig &= ~7;
 		ctx->texConfig |= units | BIT(16);
-		flags |= C3DiF_TexStatus;
+		// flags |= C3DiF_TexStatus; // moved to multi-OR just below
 
 		C3Di_Profile_Exit_Block();
 	}
 
-	if (flags & C3DiF_TexStatus)
+	if (flags & (C3DiF_TexAll | C3DiF_TexStatus))
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexStatus);
 
@@ -377,7 +376,7 @@ void C3Di_UpdateContext(void)
 
 		if (env) {
 			C3Di_LightEnvUpdate(env);
-			C3Di_Profile_Exit_Block(C3D_ProfilerSlot_LightEnv);
+			C3Di_Profile_Exit_Block();
 		}
 	}
 

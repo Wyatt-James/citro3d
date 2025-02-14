@@ -88,5 +88,5 @@ static inline C3D_Profiler* C3Di_GetProfiler(void)
 
 static inline void C3Di_Profile(C3D_ProfilerSlot category)              {}
 static inline void C3Di_Profile_Enter_Block(C3D_ProfilerSlot category)  {}
-static inline void C3Di_Profile_Exit_Block()                       {}
+static inline void C3Di_Profile_Exit_Block()                            {}
 #endif
