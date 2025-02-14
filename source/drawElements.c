@@ -9,7 +9,7 @@ void C3D_DrawElements(GPU_Primitive_t primitive, int count, int type, const void
 
 	C3Di_UpdateContext();
 
-	C3Di_Profile_Enter_Block(C3D_LogSlot_DrawElements);
+	C3Di_Profile_Enter_Block(C3D_ProfilerSlot_DrawElements);
 
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive != GPU_TRIANGLES ? primitive : GPU_GEOMETRY_PRIM);

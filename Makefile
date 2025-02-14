@@ -27,6 +27,12 @@ DATA		:=	data
 INCLUDES	:=	include
 
 #---------------------------------------------------------------------------------
+# Toggleable build flags. These should be set when calling Make.
+# These flags are passed automatically to the recursive Make invocations.
+#---------------------------------------------------------------------------------
+ENABLE_PROFILER := 0
+
+#---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
@@ -36,6 +42,13 @@ CFLAGS	:=	-g -Wall -Wno-sizeof-array-div -Werror -mword-relocations \
 			$(ARCH) $(BUILD_CFLAGS)
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DCITRO3D_BUILD
+
+ifeq ($(ENABLE_PROFILER),1)
+CFLAGS	+=	-DCITRO3D_BUILD_PROFILER
+$(info Profiler is enabled.)
+else
+$(info Profiler is disabled.)
+endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 

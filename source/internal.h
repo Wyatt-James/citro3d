@@ -1,5 +1,5 @@
 #pragma once
-#include "stdbool.h"
+#include <stdbool.h>
 #include <c3d/attribs.h>
 #include <c3d/buffers.h>
 #include <c3d/proctex.h>
@@ -7,31 +7,10 @@
 #include <c3d/framebuffer.h>
 #include <c3d/texenv.h>
 #include <c3d/fog.h>
-#include <c3d/profiler.h>
+
+#include "internal_profiler.h"
 
 #define C3D_UNUSED __attribute__((unused))
-
-#define C3D_PROFILE_BLOCK(category_, stmt_) do { \
-	C3Di_Profile_Enter_Block(category_);     \
-	{                                  \
-		stmt_;                         \
-	}                                  \
-	C3Di_Profile_Exit_Block();               \
-} while (0)
-
-typedef struct
-{
-	uint8_t external_id;
-	bool enabled;
-} C3D_ProfilerSlot;
-
-typedef struct
-{
-	void (*profiler_func)(uint32_t category);
-	C3D_ProfilerSlot log_settings[C3D_LogSlot_Count];
-	C3D_LogSlot current_block_category;
-	bool log_slot_skipped;
-} C3D_Profiler;
 
 typedef struct
 {
@@ -162,45 +141,6 @@ static inline vramAllocPos addrGetVRAMBank(const void* addr)
 {
 	u32 vaddr = (u32)addr;
 	return vaddr < OS_VRAM_VADDR + OS_VRAM_SIZE/2 ? VRAM_ALLOC_A : VRAM_ALLOC_B;
-}
-
-static inline C3D_Profiler* C3Di_GetProfiler(void)
-{
-	extern C3D_Profiler __C3D_Profiler;
-	return &__C3D_Profiler;
-}
-
-// Immediately profile a category. Should be called when acquiring control from unknown code.
-static inline bool C3Di_Profile(C3D_LogSlot category)
-{
-	C3D_Profiler* p = C3Di_GetProfiler();
-    if (category < C3D_LogSlot_Count &&
-		p->profiler_func != NULL &&
-		p->log_settings[category].enabled)
-	{
-        p->profiler_func(p->log_settings[category].external_id);
-		return true;
-	}
-	return false;
-}
-
-// Call to begin a profiler block
-static inline void C3Di_Profile_Enter_Block(C3D_LogSlot category)
-{
-	C3D_Profiler* p = C3Di_GetProfiler();
-	if (p->log_settings[category].enabled) {
-		if (p->log_slot_skipped)
-			C3Di_Profile(C3D_LogSlot_Default); // Only reset if we skipped a slot
-		p->log_slot_skipped = false;
-		p->current_block_category = category;
-	} else
-		p->log_slot_skipped = true;
-}
-
-// Call to end a profiler block
-static inline void C3Di_Profile_Exit_Block()
-{
-	C3Di_Profile(C3Di_GetProfiler()->current_block_category);
 }
 
 void C3Di_UpdateContext(void);

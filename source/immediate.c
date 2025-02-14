@@ -4,7 +4,7 @@ void C3D_ImmDrawBegin(GPU_Primitive_t primitive)
 {
 	C3Di_UpdateContext();
 
-	C3Di_Profile_Enter_Block(C3D_LogSlot_ImmediateDraw);
+	C3Di_Profile_Enter_Block(C3D_ProfilerSlot_ImmediateDraw);
 
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);

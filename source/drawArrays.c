@@ -4,7 +4,7 @@ void C3D_DrawArrays(GPU_Primitive_t primitive, int first, int size)
 {
 	C3Di_UpdateContext();
 
-	C3Di_Profile_Enter_Block(C3D_LogSlot_DrawArrays);
+	C3Di_Profile_Enter_Block(C3D_ProfilerSlot_DrawArrays);
 
 	// Set primitive type
 	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);
