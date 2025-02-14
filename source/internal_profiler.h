@@ -58,7 +58,6 @@ static inline void C3Di_Profile(C3D_ProfilerSlot category)
 // Call to begin a profiler block
 static inline void C3Di_Profile_Enter_Block(C3D_ProfilerSlot category)
 {
-
 	C3D_Profiler* p = C3Di_GetProfiler();
 	if (p->log_settings[category].enabled) {
 		if (p->log_slot_skipped)
