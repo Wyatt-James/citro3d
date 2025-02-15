@@ -111,6 +111,7 @@ void reg_dirty_wrapper(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int id, int 
 
 #define UNUSED __attribute__((unused))
 
+__attribute__((optimize("O0")))
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 {
 	int i;
