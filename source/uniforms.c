@@ -125,6 +125,7 @@ void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 		volatile int size = C3D_FVUNIF_COUNT;
 		volatile int z = 5; // breakpoint
 		reg_dirty_wrapper(C3D_FVUnifDirty[type], id, size);
+		u32 rev[3] = {C3D_FVUnifDirty[type][2], C3D_FVUnifDirty[type][1], C3D_FVUnifDirty[type][0]};
 		z += 20; // breakpoint
 	}
 	
