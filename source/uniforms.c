@@ -90,48 +90,13 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	}
 }
 
-__attribute__ ((noinline))
-void reg_dirty_wrapper(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int id, int size)
-{
-	const u32 lowest_word = id / 32;
-	const u32 highest_word = (id + size - 1) / 32;
-
-	if (lowest_word == highest_word)
-		bitfield[lowest_word] |= (C3D_SET_LSB(size) << (id - lowest_word * 32));
-	else
-		for (u32 w = lowest_word; w <= highest_word; w++) {
-			if (w == lowest_word)
-				bitfield[w] |= C3D_SET_MSB(u32, id - w * 32);   // Set upper bits of lowest word
-			else if (w == highest_word)
-				bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
-			else
-				bitfield[w] = ~0;                           // Fill intermediate words completely
-		}
-}
-
-#define UNUSED __attribute__((unused))
-
-__attribute__((optimize("O0")))
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 {
 	int i;
 	C3D_BoolUnifsDirty[type] = true;
 	if (C3Di_ShaderFVecData[type].count)
 		C3Di_ShaderFVecData[type].dirty = true;
-
-	volatile int loop = 1;
-	while(loop) {
-		for (int b = 0; b < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; b++)
-			C3D_FVUnifDirty[type][b] = 0;
-
-		volatile int id = 0;
-		volatile int size = C3D_FVUNIF_COUNT;
-		volatile int z = 5; // breakpoint
-		reg_dirty_wrapper(C3D_FVUnifDirty[type], id, size);
-		UNUSED u32 rev[3] = {C3D_FVUnifDirty[type][2], C3D_FVUnifDirty[type][1], C3D_FVUnifDirty[type][0]};
-		z += 20; // breakpoint
-	}
-	
+	C3D_RegDirty(&C3D_FVUnifDirty[type][0], 0, C3D_FVUNIF_COUNT); // Optimizes equally to setting directly
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
 }
