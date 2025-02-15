@@ -5,8 +5,6 @@
 
 #define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or undefined if there are none
 #define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or undefined if there are none
-// #define NUM_TRAILING_ONES(val_)  (__builtin_ffsl(val_) - 1)    // number of trailing 1-bits, or undefined if there are none
-// #define NUM_TRAILING_ZEROS(val_) (__builtin_ffsl(~(val_)) - 1) // number of trailing 0-bits, or undefined if there are none
 
 C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
 C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
@@ -51,7 +49,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		while (bits) {
 			if (bits & 0b1) // First bit is set: dirty reg
 			{
-				const u32 dirty_regs = NUM_TRAILING_ONES(bits);
+				const u32 dirty_regs = (bits == ~0) ? 32 : NUM_TRAILING_ONES(bits); // passing ~0 ends up returning ~0
 				bits >>= dirty_regs;
 				
 				const u32 first_dirty = (word * 32) + regs_this_word;
