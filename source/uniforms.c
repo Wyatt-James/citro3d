@@ -93,7 +93,20 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 __attribute__ ((noinline))
 void reg_dirty_wrapper(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int id, int size)
 {
-	C3D_RegDirty(bitfield, id, size);
+	const u32 lowest_word = id / 32;
+	const u32 highest_word = (id + size - 1) / 32;
+
+	if (lowest_word == highest_word)
+		bitfield[lowest_word] |= (C3D_SET_LSB(size) << (id - lowest_word * 32));
+	else
+		for (u32 w = lowest_word; w <= highest_word; w++) {
+			if (w == lowest_word)
+				bitfield[w] |= C3D_SET_MSB(u32, id - w * 32);   // Set upper bits of lowest word
+			else if (w == highest_word)
+				bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
+			else
+				bitfield[w] = ~0;                           // Fill intermediate words completely
+		}
 }
 
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
