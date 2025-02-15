@@ -90,14 +90,24 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	}
 }
 
+__attribute__ ((noinline))
+void reg_dirty_wrapper(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int id, int size)
+{
+	C3D_RegDirty(bitfield, id, size);
+}
+
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 {
 	int i;
 	C3D_BoolUnifsDirty[type] = true;
 	if (C3Di_ShaderFVecData[type].count)
 		C3Di_ShaderFVecData[type].dirty = true;
-	for (i = 0; i < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; i ++)
-		C3D_FVUnifDirty[type][i] = ~0;
+	volatile int id = 0;
+	volatile int size = C3D_FVUNIF_COUNT;
+	volatile int z = 5; // breakpoint
+	reg_dirty_wrapper(C3D_FVUnifDirty[type], id, size);
+	z += 20; // breakpoint
+	
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
 }
