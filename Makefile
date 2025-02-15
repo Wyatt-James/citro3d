@@ -41,6 +41,7 @@ CFLAGS	:=	-g -Wall -Wno-sizeof-array-div -Werror -mword-relocations \
 			-ffunction-sections -fdata-sections \
 			$(ARCH) $(BUILD_CFLAGS)
 
+CFLAGS	+=	-save-temps=obj
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DCITRO3D_BUILD
 
 ifeq ($(ENABLE_PROFILER),1)
