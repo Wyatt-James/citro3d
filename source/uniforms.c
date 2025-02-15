@@ -115,11 +115,18 @@ void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 	C3D_BoolUnifsDirty[type] = true;
 	if (C3Di_ShaderFVecData[type].count)
 		C3Di_ShaderFVecData[type].dirty = true;
-	volatile int id = 0;
-	volatile int size = C3D_FVUNIF_COUNT;
-	volatile int z = 5; // breakpoint
-	reg_dirty_wrapper(C3D_FVUnifDirty[type], id, size);
-	z += 20; // breakpoint
+
+	volatile int loop = 1;
+	while(loop) {
+		for (int b = 0; b < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; b++)
+			C3D_FVUnifDirty[type][b] = 0;
+
+		volatile int id = 0;
+		volatile int size = C3D_FVUNIF_COUNT;
+		volatile int z = 5; // breakpoint
+		reg_dirty_wrapper(C3D_FVUnifDirty[type], id, size);
+		z += 20; // breakpoint
+	}
 	
 	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
 		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
