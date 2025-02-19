@@ -178,7 +178,7 @@ void C3Di_GasUpdate(C3D_Context* ctx)
 		if (ctx->gasLut)
 		{
 			GPUCMD_AddWrite(GPUREG_GAS_LUT_INDEX, 0);
-			GPUCMD_AddWrites(GPUREG_GAS_LUT_DATA, (u32*)ctx->gasLut, 16);
+			GPUCMD_AddWrites_Auto(GPUREG_GAS_LUT_DATA, (u32*)ctx->gasLut, 16);
 		}
 	}
 }

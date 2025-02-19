@@ -40,7 +40,7 @@ void C3D_DirtyTexEnv(C3D_TexEnv* env)
 void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
 {
 	if (id >= 4) id += 2;
-	GPUCMD_AddIncrementalWrites(GPUREG_TEXENV0_SOURCE + id*8, (u32*)env, sizeof(C3D_TexEnv)/sizeof(u32));
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXENV0_SOURCE + id*8, (u32*)env, sizeof(C3D_TexEnv)/sizeof(u32));
 }
 
 void C3D_TexEnvBufUpdate(int mode, int mask)

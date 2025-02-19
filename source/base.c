@@ -222,7 +222,7 @@ void C3Di_UpdateContext(void)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Viewport);
 
-		GPUCMD_AddIncrementalWrites(GPUREG_VIEWPORT_WIDTH, ctx->viewport, 4);
+		GPUCMD_AddIncrementalWrites_Auto(GPUREG_VIEWPORT_WIDTH, ctx->viewport, 4);
 		GPUCMD_AddWrite(GPUREG_VIEWPORT_XY, ctx->viewport[4]);
 
 		C3Di_Profile_Exit_Block();
@@ -232,7 +232,7 @@ void C3Di_UpdateContext(void)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_Scissor);
 
-		GPUCMD_AddIncrementalWrites(GPUREG_SCISSORTEST_MODE, ctx->scissor, 3);
+		GPUCMD_AddIncrementalWrites_Auto(GPUREG_SCISSORTEST_MODE, ctx->scissor, 3);
 
 		C3Di_Profile_Exit_Block();
 	}
@@ -337,7 +337,7 @@ void C3Di_UpdateContext(void)
 		if (ctx->fogLut)
 		{
 			GPUCMD_AddWrite(GPUREG_FOG_LUT_INDEX, 0);
-			GPUCMD_AddWrites(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
+			GPUCMD_AddWrites_Auto(GPUREG_FOG_LUT_DATA0, ctx->fogLut->data, 128);
 		}
 
 		C3Di_Profile_Exit_Block();

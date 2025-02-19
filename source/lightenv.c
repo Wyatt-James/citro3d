@@ -20,7 +20,7 @@ static void C3Di_LightLutUpload(u32 config, C3D_LightLut* lut)
 	int i;
 	GPUCMD_AddWrite(GPUREG_LIGHTING_LUT_INDEX, config);
 	for (i = 0; i < 256; i += 8)
-		GPUCMD_AddWrites(GPUREG_LIGHTING_LUT_DATA0, &lut->data[i], 8);
+		GPUCMD_AddWrites_Auto(GPUREG_LIGHTING_LUT_DATA0, &lut->data[i], 8);
 }
 
 static void C3Di_LightEnvSelectLayer(C3D_LightEnv* env)
@@ -81,8 +81,8 @@ void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 	{
 		C3Di_LightEnvSelectLayer(env);
 		GPUCMD_AddWrite(GPUREG_LIGHTING_AMBIENT, conf->ambient);
-		GPUCMD_AddIncrementalWrites(GPUREG_LIGHTING_NUM_LIGHTS, (u32*)&conf->numLights, 3);
-		GPUCMD_AddIncrementalWrites(GPUREG_LIGHTING_LUTINPUT_ABS, (u32*)&conf->lutInput, 3);
+		GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHTING_NUM_LIGHTS, (u32*)&conf->numLights, 3);
+		GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHTING_LUTINPUT_ABS, (u32*)&conf->lutInput, 3);
 		GPUCMD_AddWrite(GPUREG_LIGHTING_LIGHT_PERMUTATION, conf->permutation);
 		env->flags &= ~C3DF_LightEnv_Dirty;
 	}
@@ -113,7 +113,7 @@ void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 
 		if (light->flags & C3DF_Light_Dirty)
 		{
-			GPUCMD_AddIncrementalWrites(GPUREG_LIGHT0_SPECULAR0 + i*0x10, (u32*)&light->conf, 12);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHT0_SPECULAR0 + i*0x10, (u32*)&light->conf, 12);
 			light->flags &= ~C3DF_Light_Dirty;
 		}
 

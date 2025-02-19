@@ -34,7 +34,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		while (i < C3Di_ShaderFVecData[type].count)
 		{
 			float24Uniform_s* u = &C3Di_ShaderFVecData[type].data[i++];
-			GPUCMD_AddIncrementalWrites(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, (u32*)u, 4);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, (u32*)u, 4);
 			C3D_RegClean(C3D_FVUnifDirty[type], u->id, 1);
 		}
 		C3Di_ShaderFVecData[type].dirty = false;
@@ -56,7 +56,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 				const u32 next_clean = first_dirty + dirty_regs;
 				
 				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | first_dirty);
-				GPUCMD_AddWrites(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][first_dirty], (next_clean - first_dirty) * 4);
+				GPUCMD_AddWrites_Auto(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][first_dirty], (next_clean - first_dirty) * 4);
 				regs_this_word += dirty_regs;
 			}
 			else // First bit is clear: clean reg

@@ -91,8 +91,8 @@ void C3Di_EffectBind(C3D_Effect* e)
 {
 	GPUCMD_AddWrite(GPUREG_DEPTHMAP_ENABLE, e->zBuffer ? 1 : 0);
 	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3);
-	GPUCMD_AddIncrementalWrites(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2);
-	GPUCMD_AddIncrementalWrites(GPUREG_FRAGOP_ALPHA_TEST, (u32*)&e->alphaTest, 4);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_FRAGOP_ALPHA_TEST, (u32*)&e->alphaTest, 4);
 	GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x8, (u32)GPU_MAKEGASDEPTHFUNC((e->depthTest>>4)&7) << 24);
 	GPUCMD_AddWrite(GPUREG_BLEND_COLOR, e->blendClr);
 	GPUCMD_AddWrite(GPUREG_BLEND_FUNC, e->alphaBlend);

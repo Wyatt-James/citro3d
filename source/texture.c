@@ -285,15 +285,15 @@ void C3Di_SetTex(int unit, C3D_Tex* tex)
 	switch (unit)
 	{
 		case 0:
-			GPUCMD_AddIncrementalWrites(GPUREG_TEXUNIT0_BORDER_COLOR, reg, regcount);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT0_BORDER_COLOR, reg, regcount);
 			GPUCMD_AddWrite(GPUREG_TEXUNIT0_TYPE, tex->fmt);
 			break;
 		case 1:
-			GPUCMD_AddIncrementalWrites(GPUREG_TEXUNIT1_BORDER_COLOR, reg, 5);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT1_BORDER_COLOR, reg, 5);
 			GPUCMD_AddWrite(GPUREG_TEXUNIT1_TYPE, tex->fmt);
 			break;
 		case 2:
-			GPUCMD_AddIncrementalWrites(GPUREG_TEXUNIT2_BORDER_COLOR, reg, 5);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT2_BORDER_COLOR, reg, 5);
 			GPUCMD_AddWrite(GPUREG_TEXUNIT2_TYPE, tex->fmt);
 			break;
 	}

@@ -55,7 +55,7 @@ void C3D_ImmSendAttrib(float x, float y, float z, float w)
 	param.packed[2] = p;
 
 	// Send the attribute
-	GPUCMD_AddIncrementalWrites(GPUREG_FIXEDATTRIB_DATA0, param.packed, 3);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_FIXEDATTRIB_DATA0, param.packed, 3);
 }
 
 void C3D_ImmDrawEnd(void)
