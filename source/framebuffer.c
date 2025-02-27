@@ -57,10 +57,13 @@ void C3Di_FrameBufBind(C3D_FrameBuf* fb)
 	param[2] = 0x01000000 | (((u32)(fb->height-1) & 0xFFF) << 12) | (fb->width & 0xFFF);
 	GPUCMD_AddIncrementalWrites_Auto(GPUREG_DEPTHBUFFER_LOC, param, 3);
 
-	GPUCMD_AddWrite(GPUREG_RENDERBUF_DIM,       param[2]);
-	GPUCMD_AddWrite(GPUREG_DEPTHBUFFER_FORMAT,  fb->depthFmt);
-	GPUCMD_AddWrite(GPUREG_COLORBUFFER_FORMAT,  colorFmtSizes[fb->colorFmt] | ((u32)fb->colorFmt << 16));
-	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_BLOCK32, fb->block32 ? 1 : 0);
+	gpucmd_single_t cmds[] = {
+		GPUCMD_Single(GPUREG_RENDERBUF_DIM,       param[2]),
+		GPUCMD_Single(GPUREG_DEPTHBUFFER_FORMAT,  fb->depthFmt),
+		GPUCMD_Single(GPUREG_COLORBUFFER_FORMAT,  colorFmtSizes[fb->colorFmt] | ((u32)fb->colorFmt << 16)),
+		GPUCMD_Single(GPUREG_FRAMEBUFFER_BLOCK32, fb->block32 ? 1 : 0),
+	};
+	GPUCMD_AddBatchOfSingles(cmds);
 
 	// Enable or disable color/depth buffers
 	param[0] = param[1] = fb->colorBuf ? fb->colorMask : 0;
