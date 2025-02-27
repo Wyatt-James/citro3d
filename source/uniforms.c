@@ -10,8 +10,8 @@ C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
 C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
 u16      C3D_BoolUnifs[2];
 
-u32  C3D_FVUnifDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH];
-bool C3D_IVUnifDirty[2][C3D_IVUNIF_COUNT];
+u32  C3D_FVUnifDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH]; // 96-bit bitfield
+u8   C3D_IVUnifDirty[2]; // 4-bit bitfield
 bool C3D_BoolUnifsDirty[2];
 
 static struct
@@ -20,8 +20,6 @@ static struct
 	int count;
 	float24Uniform_s* data;
 } C3Di_ShaderFVecData[2];
-
-static bool C3Di_IVUnifEverDirty[2][C3D_IVUNIF_COUNT];
 
 void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 {
@@ -73,13 +71,16 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		C3D_FVUnifDirty[type][i] = 0;
 
 	// Update IVec uniforms
-	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
+	if (C3D_IVUnifDirty[type])
 	{
-		if (!C3D_IVUnifDirty[type][i]) continue;
-
-		GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+offset+i, C3D_IVUnif[type][i]);
-		C3D_IVUnifDirty[type][i] = false;
-		C3Di_IVUnifEverDirty[type][i] = false;
+		for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
+		{
+			if (C3D_IVUnifDirty[type] & BIT(i))
+			{
+				GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+offset+i, C3D_IVUnif[type][i]);
+			}
+		}
+		C3D_IVUnifDirty[type] = 0;
 	}
 
 	// Update bool uniforms
@@ -92,13 +93,11 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type)
 {
-	int i;
 	C3D_BoolUnifsDirty[type] = true;
 	if (C3Di_ShaderFVecData[type].count)
 		C3Di_ShaderFVecData[type].dirty = true;
 	C3D_RegDirty(&C3D_FVUnifDirty[type][0], 0, C3D_FVUNIF_COUNT); // Optimizes equally to setting directly
-	for (i = 0; i < C3D_IVUNIF_COUNT; i ++)
-		C3D_IVUnifDirty[type][i] = C3D_IVUnifDirty[type][i] || C3Di_IVUnifEverDirty[type][i];
+	C3D_IVUnifDirty[type] = C3D_SET_LSB(C3D_IVUNIF_COUNT);
 }
 
 void C3Di_LoadShaderUniforms(shaderInstance_s* si)
@@ -121,8 +120,8 @@ void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 		{
 			if (si->intUniformMask & BIT(i))
 			{
-				C3D_IVUnif[type][i] = si->intUniforms[i];
-				C3D_IVUnifDirty[type][i] = true;
+				C3D_IVUnif[type][i] = si->intUniforms[i]; // Struct copy (u32)
+				C3D_IVUnifDirty[type] |= BIT(i);
 			}
 		}
 	}

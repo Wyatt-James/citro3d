@@ -14,7 +14,7 @@ extern C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
 extern u16      C3D_BoolUnifs[2];
 
 extern u32  C3D_FVUnifDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH]; // 96-bit bitfield
-extern bool C3D_IVUnifDirty[2][C3D_IVUNIF_COUNT];
+extern u8   C3D_IVUnifDirty[2]; // 4-bit bitfield
 extern bool C3D_BoolUnifsDirty[2];
 
 // Marks the given registers in the bitfield as dirty
@@ -64,7 +64,7 @@ static inline C3D_FVec* C3D_FVUnifWritePtr(GPU_SHADER_TYPE type, int id, int siz
 static inline C3D_IVec* C3D_IVUnifWritePtr(GPU_SHADER_TYPE type, int id)
 {
 	id -= 0x60;
-	C3D_IVUnifDirty[type][id] = true;
+	C3D_IVUnifDirty[type] |= BIT(id);
 	return &C3D_IVUnif[type][id];
 }
 
