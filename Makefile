@@ -30,7 +30,9 @@ INCLUDES	:=	include
 # Toggleable build flags. These should be set when calling Make.
 # These flags are passed automatically to the recursive Make invocations.
 #---------------------------------------------------------------------------------
-ENABLE_PROFILER := 0
+ENABLE_PROFILER	:=	0
+GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
+GPUCMD_INLINE_THRESH	:=	6
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -43,6 +45,16 @@ CFLAGS	:=	-g -Wall -Wno-sizeof-array-div -Werror -mword-relocations \
 
 CFLAGS	+=	-save-temps=obj
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DCITRO3D_BUILD
+
+ifeq ($(GPUCMD_DISABLE_BOUNDS_CHECKS),1)
+$(info GPUCMD bounds checks are disabled.)
+CFLAGS	+=	-DCTRU_GPUCMD_DISABLE_BOUNDS_CHECKS
+else
+$(info GPUCMD bounds checks are enabled.)
+endif
+
+$(info GPUCMD Inline Threshold is $(GPUCMD_INLINE_THRESH).)
+CFLAGS	+=	-DGPUCMD_INLINE_THRESH=$(GPUCMD_INLINE_THRESH)
 
 ifeq ($(ENABLE_PROFILER),1)
 CFLAGS	+=	-DCITRO3D_BUILD_PROFILER
