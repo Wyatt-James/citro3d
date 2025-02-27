@@ -17,7 +17,7 @@ bool C3D_BoolUnifsDirty[2];
 static struct
 {
 	bool dirty;
-	int count;
+	u8   count;
 	float24Uniform_s* data;
 } C3Di_ShaderFVecData[2];
 
@@ -29,14 +29,13 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	// Update FVec uniforms that come from shader constants
 	if (C3Di_ShaderFVecData[type].dirty)
 	{
-		while (i < C3Di_ShaderFVecData[type].count)
+		for (i = 0; i < C3Di_ShaderFVecData[type].count; i++)
 		{
-			float24Uniform_s* u = &C3Di_ShaderFVecData[type].data[i++];
+			float24Uniform_s* u = &C3Di_ShaderFVecData[type].data[i];
 			GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, (u32*)u, 4);
 			C3D_RegClean(C3D_FVUnifDirty[type], u->id, 1);
 		}
 		C3Di_ShaderFVecData[type].dirty = false;
-		i = 0;
 	}
 
 	// Update FVec uniforms
