@@ -9,6 +9,14 @@ C3D_Context __C3D_Context;
 
 static aptHookCookie hookCookie;
 
+static inline void C3Di_AttrInfoBind(C3D_AttrInfo* info);
+static inline void C3Di_BufInfoBind(C3D_BufInfo* info);
+static inline void C3Di_FrameBufBind(C3D_FrameBuf* fb);
+static inline void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
+static inline void C3Di_SetTex(int unit, C3D_Tex* tex);
+static inline void C3Di_EffectBind(C3D_Effect* e);
+static inline void C3Di_GasUpdate(C3D_Context* ctx);
+
 __attribute__((weak)) void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 {
 	(void)env;
@@ -25,11 +33,6 @@ __attribute__((weak)) void C3Di_ProcTexUpdate(C3D_Context* ctx)
 }
 
 __attribute__((weak)) void C3Di_ProcTexDirty(C3D_Context* ctx)
-{
-	(void)ctx;
-}
-
-__attribute__((weak)) void C3Di_GasUpdate(C3D_Context* ctx)
 {
 	(void)ctx;
 }
@@ -517,4 +520,135 @@ C3D_FVec* C3D_FixedAttribGetWritePtr(int id)
 	ctx->fixedAttribDirty     |= BIT(id);
 	ctx->fixedAttribEverDirty |= BIT(id);
 	return &ctx->fixedAttribs[id];
+}
+
+static inline void C3Di_AttrInfoBind(C3D_AttrInfo* info)
+{
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFERS_FORMAT_LOW, (u32*)info->flags, sizeof(info->flags)/sizeof(u32));
+	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1));
+	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, info->attrCount - 1);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW, (u32*)&info->permutation, 2);
+}
+
+static inline void C3Di_BufInfoBind(C3D_BufInfo* info)
+{
+	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, info->base_paddr >> 3);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)info->buffers, sizeof(info->buffers)/sizeof(u32));
+}
+
+static inline void C3Di_FrameBufBind(C3D_FrameBuf* fb)
+{
+	static const u8 colorFmtSizes[] = {2,1,0,0,0};
+	u32 param[4] = { 0, 0, 0, 0 };
+
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
+
+	param[0] = osConvertVirtToPhys(fb->depthBuf) >> 3;
+	param[1] = osConvertVirtToPhys(fb->colorBuf) >> 3;
+	param[2] = 0x01000000 | (((u32)(fb->height-1) & 0xFFF) << 12) | (fb->width & 0xFFF);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_DEPTHBUFFER_LOC, param, 3);
+
+	GPUCMD_AddWrite(GPUREG_RENDERBUF_DIM,       param[2]);
+	GPUCMD_AddWrite(GPUREG_DEPTHBUFFER_FORMAT,  fb->depthFmt);
+	GPUCMD_AddWrite(GPUREG_COLORBUFFER_FORMAT,  colorFmtSizes[fb->colorFmt] | ((u32)fb->colorFmt << 16));
+	GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_BLOCK32, fb->block32 ? 1 : 0);
+
+	// Enable or disable color/depth buffers
+	param[0] = param[1] = fb->colorBuf ? fb->colorMask : 0;
+	param[2] = param[3] = fb->depthBuf ? fb->depthMask : 0;
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_COLORBUFFER_READ, param, 4);
+}
+
+static inline void C3Di_TexEnvBind(int id, C3D_TexEnv* env)
+{
+	if (id >= 4) id += 2;
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXENV0_SOURCE + id*8, (u32*)env, sizeof(C3D_TexEnv)/sizeof(u32));
+}
+
+static inline void C3Di_SetTex(int unit, C3D_Tex* tex)
+{
+	u32 reg[10];
+	u32 regcount = 5;
+	reg[0] = tex->border;
+	reg[1] = tex->dim;
+	reg[2] = tex->param;
+	reg[3] = tex->lodParam;
+	if (C3Di_TexIs2D(tex))
+		reg[4] = osConvertVirtToPhys(tex->data) >> 3;
+	else
+	{
+		int i;
+		C3D_TexCube* cube = tex->cube;
+		regcount = 10;
+		reg[4] = osConvertVirtToPhys(cube->data[0]) >> 3;
+		for (i = 1; i < 6; i ++)
+			reg[4+i] = (osConvertVirtToPhys(cube->data[i]) >> 3) & 0x3FFFFF;
+	}
+
+	switch (unit)
+	{
+		case 0:
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT0_BORDER_COLOR, reg, regcount);
+			GPUCMD_AddWrite(GPUREG_TEXUNIT0_TYPE, tex->fmt);
+			break;
+		case 1:
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT1_BORDER_COLOR, reg, 5);
+			GPUCMD_AddWrite(GPUREG_TEXUNIT1_TYPE, tex->fmt);
+			break;
+		case 2:
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT2_BORDER_COLOR, reg, 5);
+			GPUCMD_AddWrite(GPUREG_TEXUNIT2_TYPE, tex->fmt);
+			break;
+	}
+}
+
+static inline void C3Di_EffectBind(C3D_Effect* e)
+{
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2);
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_FRAGOP_ALPHA_TEST, (u32*)&e->alphaTest, 4);
+	GPUCMD_AddWrite(GPUREG_DEPTHMAP_ENABLE, e->zBuffer ? 1 : 0);
+	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3);
+	GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x8, (u32)GPU_MAKEGASDEPTHFUNC((e->depthTest>>4)&7) << 24);
+	GPUCMD_AddWrite(GPUREG_BLEND_COLOR, e->blendClr);
+	GPUCMD_AddWrite(GPUREG_BLEND_FUNC, e->alphaBlend);
+	GPUCMD_AddWrite(GPUREG_LOGIC_OP, e->clrLogicOp);
+	GPUCMD_AddMaskedWrite(GPUREG_COLOR_OPERATION, 7, e->fragOpMode);
+	GPUCMD_AddWrite(GPUREG_FRAGOP_SHADOW, e->fragOpShadow);
+	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_TEST1, 1, e->earlyDepth ? 1 : 0);
+	GPUCMD_AddWrite(GPUREG_EARLYDEPTH_TEST2, e->earlyDepth ? 1 : 0);
+	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_FUNC, 1, e->earlyDepthFunc);
+	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_DATA, 0x7, e->earlyDepthRef);
+}
+
+static inline void C3Di_GasUpdate(C3D_Context* ctx)
+{
+	if (ctx->flags & C3DiF_Gas)
+	{
+		ctx->flags &= ~C3DiF_Gas;
+		u32 gasFlags = ctx->gasFlags;
+		ctx->gasFlags = 0;
+
+		if (gasFlags & C3DiG_BeginAcc)
+			GPUCMD_AddMaskedWrite(GPUREG_GAS_ACCMAX_FEEDBACK, 0x3, 0);
+		if (gasFlags & C3DiG_AccStage)
+			GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x7, ctx->gasDeltaZ);
+		if (gasFlags & C3DiG_SetAccMax)
+			GPUCMD_AddWrite(GPUREG_GAS_ACCMAX, ctx->gasAccMax);
+		if (gasFlags & C3DiG_RenderStage)
+		{
+			GPUCMD_AddWrite(GPUREG_GAS_ATTENUATION, ctx->gasAttn);
+			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_XY, ctx->gasLightXY);
+			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_Z, ctx->gasLightZ);
+			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_Z_COLOR, ctx->gasLightZColor);
+		}
+	}
+	if (ctx->flags & C3DiF_GasLut)
+	{
+		ctx->flags &= ~C3DiF_GasLut;
+		if (ctx->gasLut)
+		{
+			GPUCMD_AddWrite(GPUREG_GAS_LUT_INDEX, 0);
+			GPUCMD_AddWrites_Auto(GPUREG_GAS_LUT_DATA, (u32*)ctx->gasLut, 16);
+		}
+	}
 }

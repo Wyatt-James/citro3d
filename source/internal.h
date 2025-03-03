@@ -11,6 +11,7 @@
 #include "internal_profiler.h"
 
 #define C3D_UNUSED __attribute__((unused))
+#define C3D_ASSUME if (!(cond)) __builtin_unreachable()
 
 typedef struct
 {
@@ -144,13 +145,6 @@ static inline vramAllocPos addrGetVRAMBank(const void* addr)
 }
 
 void C3Di_UpdateContext(void);
-void C3Di_AttrInfoBind(C3D_AttrInfo* info);
-void C3Di_BufInfoBind(C3D_BufInfo* info);
-void C3Di_FrameBufBind(C3D_FrameBuf* fb);
-void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
-void C3Di_SetTex(int unit, C3D_Tex* tex);
-void C3Di_EffectBind(C3D_Effect* effect);
-void C3Di_GasUpdate(C3D_Context* ctx);
 
 void C3Di_LightMtlBlend(C3D_Light* light);
 

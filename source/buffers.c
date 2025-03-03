@@ -45,9 +45,3 @@ void C3D_SetBufInfo(C3D_BufInfo* info)
 		memcpy(&ctx->bufInfo, info, sizeof(*info));
 	ctx->flags |= C3DiF_BufInfo;
 }
-
-void C3Di_BufInfoBind(C3D_BufInfo* info)
-{
-	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, info->base_paddr >> 3);
-	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)info->buffers, sizeof(info->buffers)/sizeof(u32));
-}

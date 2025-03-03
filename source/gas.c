@@ -149,36 +149,3 @@ void C3D_GasLutBind(C3D_GasLut* lut)
 	} else
 		ctx->flags &= ~C3DiF_GasLut;
 }
-
-void C3Di_GasUpdate(C3D_Context* ctx)
-{
-	if (ctx->flags & C3DiF_Gas)
-	{
-		ctx->flags &= ~C3DiF_Gas;
-		u32 gasFlags = ctx->gasFlags;
-		ctx->gasFlags = 0;
-
-		if (gasFlags & C3DiG_BeginAcc)
-			GPUCMD_AddMaskedWrite(GPUREG_GAS_ACCMAX_FEEDBACK, 0x3, 0);
-		if (gasFlags & C3DiG_AccStage)
-			GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x7, ctx->gasDeltaZ);
-		if (gasFlags & C3DiG_SetAccMax)
-			GPUCMD_AddWrite(GPUREG_GAS_ACCMAX, ctx->gasAccMax);
-		if (gasFlags & C3DiG_RenderStage)
-		{
-			GPUCMD_AddWrite(GPUREG_GAS_ATTENUATION, ctx->gasAttn);
-			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_XY, ctx->gasLightXY);
-			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_Z, ctx->gasLightZ);
-			GPUCMD_AddWrite(GPUREG_GAS_LIGHT_Z_COLOR, ctx->gasLightZColor);
-		}
-	}
-	if (ctx->flags & C3DiF_GasLut)
-	{
-		ctx->flags &= ~C3DiF_GasLut;
-		if (ctx->gasLut)
-		{
-			GPUCMD_AddWrite(GPUREG_GAS_LUT_INDEX, 0);
-			GPUCMD_AddWrites_Auto(GPUREG_GAS_LUT_DATA, (u32*)ctx->gasLut, 16);
-		}
-	}
-}
