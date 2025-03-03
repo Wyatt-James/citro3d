@@ -300,19 +300,15 @@ void C3Di_UpdateContext(void)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexStatus);
 
+		GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig);
+
 		if (ctx->texConfig & BIT(16))
 		{
 			ctx->texConfig &= ~BIT(16);
-			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig);
 			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0x4, BIT(16));        // Clear texture cache if requested *after* configuring texture units
-			GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
-		}
-		else
-		{
-			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig);
-			GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
 		}
 
+		GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
 
 		C3Di_Profile_Exit_Block();
 	}
