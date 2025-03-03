@@ -210,11 +210,8 @@ void C3Di_UpdateContext(void)
 
 		if (flags & C3DiF_DrawUsed)
 		{
-			gpucmd_single_t cmds[] = {
-				GPUCMD_Single(GPUREG_FRAMEBUFFER_FLUSH, 1),
-				GPUCMD_Single(GPUREG_EARLYDEPTH_CLEAR, 1),
-			};
-			GPUCMD_AddBatchOfSingles(cmds);
+			GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+			GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
 		}
 		C3Di_FrameBufBind(&ctx->fb);
 
@@ -306,20 +303,14 @@ void C3Di_UpdateContext(void)
 		if (ctx->texConfig & BIT(16))
 		{
 			ctx->texConfig &= ~BIT(16);
-			gpucmd_single_t cmds[] = {
-				GPUCMD_MaskedSingle(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig),
-				GPUCMD_MaskedSingle(GPUREG_TEXUNIT_CONFIG, 0x4, BIT(16)),        // Clear texture cache if requested *after* configuring texture units
-				GPUCMD_Single(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow),
-			};
-			GPUCMD_AddBatchOfSingles(cmds);
+			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig);
+			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0x4, BIT(16));        // Clear texture cache if requested *after* configuring texture units
+			GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
 		}
 		else
 		{
-			gpucmd_single_t cmds[] = {
-				GPUCMD_MaskedSingle(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig),
-				GPUCMD_Single(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow),
-			};
-			GPUCMD_AddBatchOfSingles(cmds);
+			GPUCMD_AddMaskedWrite(GPUREG_TEXUNIT_CONFIG, 0xB, ctx->texConfig);
+			GPUCMD_AddWrite(GPUREG_TEXUNIT0_SHADOW, ctx->texShadow);
 		}
 
 
@@ -337,12 +328,9 @@ void C3Di_UpdateContext(void)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexEnvBuf);
 
-		gpucmd_single_t cmds[] = {
-			GPUCMD_MaskedSingle(GPUREG_TEXENV_UPDATE_BUFFER, 0x7, ctx->texEnvBuf),
-			GPUCMD_Single(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr),
-			GPUCMD_Single(GPUREG_FOG_COLOR, ctx->fogClr),
-		};
-		GPUCMD_AddBatchOfSingles(cmds);
+		GPUCMD_AddMaskedWrite(GPUREG_TEXENV_UPDATE_BUFFER, 0x7, ctx->texEnvBuf);
+		GPUCMD_AddWrite(GPUREG_TEXENV_BUFFER_COLOR, ctx->texEnvBufClr);
+		GPUCMD_AddWrite(GPUREG_FOG_COLOR, ctx->fogClr);
 
 		C3Di_Profile_Exit_Block();
 	}
@@ -387,11 +375,8 @@ void C3Di_UpdateContext(void)
 		{
 			u32 enable = env != NULL;
 			if (enable) C3Di_Profile_Enter_Block(C3D_ProfilerSlot_LightEnv);
-			gpucmd_single_t cmds[] = {
-				GPUCMD_Single(GPUREG_LIGHTING_ENABLE0, enable),
-				GPUCMD_Single(GPUREG_LIGHTING_ENABLE1, !enable),
-			};
-			GPUCMD_AddBatchOfSingles(cmds);
+			GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE0, enable);
+			GPUCMD_AddWrite(GPUREG_LIGHTING_ENABLE1, !enable);
 		}
 
 		if (env) {
@@ -452,12 +437,9 @@ bool C3Di_SplitFrame(u32** pBuf, u32* pSize)
 	if (ctx->flags & C3DiF_DrawUsed)
 	{
 		ctx->flags &= ~C3DiF_DrawUsed;
-		gpucmd_single_t cmds[] = {
-			GPUCMD_Single(GPUREG_FRAMEBUFFER_FLUSH, 1),
-			GPUCMD_Single(GPUREG_FRAMEBUFFER_INVALIDATE, 1),
-			GPUCMD_Single(GPUREG_EARLYDEPTH_CLEAR, 1),
-		};
-		GPUCMD_AddBatchOfSingles(cmds);
+		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+		GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
+		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
 	}
 
 	GPUCMD_Split(pBuf, pSize);

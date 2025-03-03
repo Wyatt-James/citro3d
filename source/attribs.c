@@ -146,10 +146,7 @@ void C3D_SetAttrInfo(C3D_AttrInfo* info)
 void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 {
 	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFERS_FORMAT_LOW, (u32*)info->flags, sizeof(info->flags)/sizeof(u32));
-	gpucmd_single_t cmds[] = {
-		GPUCMD_MaskedSingle(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1)),
-		GPUCMD_Single(GPUREG_VSH_NUM_ATTR, info->attrCount - 1),
-	};
-	GPUCMD_AddBatchOfSingles(cmds);
+	GPUCMD_AddMaskedWrite(GPUREG_VSH_INPUTBUFFER_CONFIG, 0xB, 0xA0000000 | (info->attrCount - 1));
+	GPUCMD_AddWrite(GPUREG_VSH_NUM_ATTR, info->attrCount - 1);
 	GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW, (u32*)&info->permutation, 2);
 }
