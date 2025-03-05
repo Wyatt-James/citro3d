@@ -585,21 +585,29 @@ static inline void C3Di_SetTex(int unit, C3D_Tex* tex)
 			reg[4+i] = (osConvertVirtToPhys(cube->data[i]) >> 3) & 0x3FFFFF;
 	}
 
+	u32 unit_border_color_reg;
+	u32 unit_type_reg;
+
 	switch (unit)
 	{
 		case 0:
-			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT0_BORDER_COLOR, reg, regcount);
-			GPUCMD_AddWrite(GPUREG_TEXUNIT0_TYPE, tex->fmt);
+			unit_border_color_reg = GPUREG_TEXUNIT0_BORDER_COLOR;
+			unit_type_reg = GPUREG_TEXUNIT0_TYPE;
 			break;
 		case 1:
-			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT1_BORDER_COLOR, reg, 5);
-			GPUCMD_AddWrite(GPUREG_TEXUNIT1_TYPE, tex->fmt);
+			unit_border_color_reg = GPUREG_TEXUNIT1_BORDER_COLOR;
+			unit_type_reg = GPUREG_TEXUNIT1_TYPE;
 			break;
 		case 2:
-			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT2_BORDER_COLOR, reg, 5);
-			GPUCMD_AddWrite(GPUREG_TEXUNIT2_TYPE, tex->fmt);
+			unit_border_color_reg = GPUREG_TEXUNIT2_BORDER_COLOR;
+			unit_type_reg = GPUREG_TEXUNIT2_TYPE;
 			break;
+		default:
+			__builtin_unreachable();
 	}
+	
+	GPUCMD_AddIncrementalWrites_Auto(unit_border_color_reg, reg, regcount);
+	GPUCMD_AddWrite(unit_type_reg, tex->fmt);
 }
 
 static inline void C3Di_EffectBind(C3D_Effect* e)
