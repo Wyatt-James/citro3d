@@ -33,6 +33,7 @@ INCLUDES	:=	include
 ENABLE_PROFILER	:=	0
 GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
 GPUCMD_INLINE_THRESH	:=	6
+AVOID_GSPGPU_FLUSH	:=	1
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -46,6 +47,8 @@ CFLAGS	:=	-g -Wall -Wno-sizeof-array-div -Werror -mword-relocations \
 CFLAGS	+=	-save-temps=obj
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DCITRO3D_BUILD
 
+# Avoid overhead of bounds checks, and improve the compiler's
+# optimization by staying within the translation unit.
 ifeq ($(GPUCMD_DISABLE_BOUNDS_CHECKS),1)
 $(info GPUCMD bounds checks are disabled.)
 CFLAGS	+=	-DCTRU_GPUCMD_DISABLE_BOUNDS_CHECKS
@@ -53,9 +56,19 @@ else
 $(info GPUCMD bounds checks are enabled.)
 endif
 
+# Avoid IPC overhead by using the svc flush instead.
+ifeq ($(AVOID_GSPGPU_FLUSH),1)
+$(info GSPGPU flush disabled: will use svcFlushDataCache.)
+CFLAGS	+=	-DAVOID_GSPGPU_FLUSH
+else
+$(info GSPGPU flush enabled: will use GSPGPU_FlushDataCache.)
+endif
+
+# Automatically inline GPUCMD_Add*_Auto calls <= this threshold.
 $(info GPUCMD Inline Threshold is $(GPUCMD_INLINE_THRESH).)
 CFLAGS	+=	-DGPUCMD_INLINE_THRESH=$(GPUCMD_INLINE_THRESH)
 
+# Enable or disable C3D profiler hooks at compile-time.
 ifeq ($(ENABLE_PROFILER),1)
 CFLAGS	+=	-DCITRO3D_BUILD_PROFILER
 $(info Profiler is enabled.)
