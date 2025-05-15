@@ -236,7 +236,7 @@ void C3D_TexBind(int unitId, C3D_Tex* tex)
 void C3D_TexFlush(C3D_Tex* tex)
 {
 	if (!addrIsVRAM(tex->data))
-		C3D_GSPGPU_FlushDataCache_Wrapper(tex->data, C3D_TexCalcTotalSize(tex->size, tex->maxLevel));
+		GSPGPU_FlushDataCache(tex->data, C3D_TexCalcTotalSize(tex->size, tex->maxLevel));
 }
 
 void C3D_TexDelete(C3D_Tex* tex)

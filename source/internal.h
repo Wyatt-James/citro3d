@@ -13,12 +13,6 @@
 #define C3D_UNUSED __attribute__((unused))
 #define C3D_ASSUME if (!(cond)) __builtin_unreachable()
 
-#ifdef AVOID_GSPGPU_FLUSH
-#define C3D_GSPGPU_FlushDataCache_Wrapper(adr, size) svcFlushProcessDataCache(CUR_PROCESS_HANDLE, (u32) adr, size)
-#else
-#define C3D_GSPGPU_FlushDataCache_Wrapper(adr, size) GSPGPU_FlushDataCache(adr, size)
-#endif
-
 typedef struct
 {
 	u32 fragOpMode;

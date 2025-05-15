@@ -151,7 +151,7 @@ Tex3DSi_ImportCommon(C3D_Tex* tex, C3D_TexCube* texcube, bool vram, decompressCa
 		}
 
 		// Flush buffer to prepare DMA to VRAM
-		C3D_GSPGPU_FlushDataCache_Wrapper(texdata, texsize);
+		GSPGPU_FlushDataCache(texdata, texsize);
 
 		size_t texcount = 1;
 		if (params.type == GPU_TEX_CUBE_MAP)

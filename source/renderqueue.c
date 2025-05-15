@@ -240,7 +240,7 @@ void C3D_FrameEnd(u8 flags)
 	{
 		extern u32 __ctru_linear_heap;
 		extern u32 __ctru_linear_heap_size;
-		C3D_GSPGPU_FlushDataCache_Wrapper((void*)__ctru_linear_heap, __ctru_linear_heap_size);
+		GSPGPU_FlushDataCache((void*)__ctru_linear_heap, __ctru_linear_heap_size);
 	}
 
 	int i;

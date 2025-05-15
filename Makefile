@@ -33,7 +33,6 @@ INCLUDES	:=	include
 ENABLE_PROFILER	:=	0
 GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
 GPUCMD_INLINE_THRESH	:=	6
-AVOID_GSPGPU_FLUSH	:=	1
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -54,14 +53,6 @@ $(info GPUCMD bounds checks are disabled.)
 CFLAGS	+=	-DCTRU_GPUCMD_DISABLE_BOUNDS_CHECKS
 else
 $(info GPUCMD bounds checks are enabled.)
-endif
-
-# Avoid IPC overhead by using the svc flush instead.
-ifeq ($(AVOID_GSPGPU_FLUSH),1)
-$(info GSPGPU flush disabled: will use svcFlushDataCache.)
-CFLAGS	+=	-DAVOID_GSPGPU_FLUSH
-else
-$(info GSPGPU flush enabled: will use GSPGPU_FlushDataCache.)
 endif
 
 # Automatically inline GPUCMD_Add*_Auto calls <= this threshold.
