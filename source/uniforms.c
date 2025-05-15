@@ -38,8 +38,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		C3Di_ShaderFVecData[type].dirty = false;
 	}
 
-	// Update FVec uniforms
-	// WYATT_TODO add support for batching across word boundaries
+	// Update FVec uniforms. Does not batch across word boundaries.
 	for (u32 word = 0; word < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; word++) {
 		u32 regs_this_word = 0;
 		u32 bits = C3D_FVUnifDirty[type][word];
