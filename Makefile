@@ -31,6 +31,7 @@ INCLUDES	:=	include
 # These flags are passed automatically to the recursive Make invocations.
 #---------------------------------------------------------------------------------
 ENABLE_PROFILER	:=	0
+ENABLE_LTO	:=	0
 GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
 GPUCMD_INLINE_THRESH	:=	6
 
@@ -53,6 +54,14 @@ $(info GPUCMD bounds checks are disabled.)
 CFLAGS	+=	-DCTRU_GPUCMD_DISABLE_BOUNDS_CHECKS
 else
 $(info GPUCMD bounds checks are enabled.)
+endif
+
+# Enable link-time optimization
+ifeq ($(ENABLE_LTO),1)
+$(info Link-time Optimization is enabled.)
+CFLAGS	+=	-flto
+else
+$(info Link-time Optimization is disabled.)
 endif
 
 # Automatically inline GPUCMD_Add*_Auto calls <= this threshold.
