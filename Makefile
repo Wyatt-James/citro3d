@@ -33,6 +33,7 @@ INCLUDES	:=	include
 ENABLE_PROFILER	:=	0
 ENABLE_LTO	:=	0
 GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
+GPUCMD_ENABLE_ZERO_PADDING	:=	0
 GPUCMD_INLINE_THRESH	:=	6
 
 #---------------------------------------------------------------------------------
@@ -54,6 +55,14 @@ $(info GPUCMD bounds checks are disabled.)
 CFLAGS	+=	-DCTRU_GPUCMD_DISABLE_BOUNDS_CHECKS
 else
 $(info GPUCMD bounds checks are enabled.)
+endif
+
+# If enabled, GPU commands of odd lengths will be padded with zeros. If disabled, the padding is undefined.
+ifeq ($(GPUCMD_ENABLE_ZERO_PADDING),1)
+$(info GPUCMD Zero-Padding is enabled.)
+CFLAGS	+=	-DGPUCMD_ENABLE_ZERO_PADDING
+else
+$(info GPUCMD Zero-Padding is disabled.)
 endif
 
 # Enable link-time optimization
