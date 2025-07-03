@@ -10,7 +10,7 @@ C3D_Context __C3D_Context;
 static aptHookCookie hookCookie;
 
 static inline void C3Di_AttrInfoBind(C3D_AttrInfo* info);
-static inline void C3Di_BufInfoBind(C3D_BufInfo* info);
+static inline void C3Di_BufInfoBind(C3D_BufInfo* info, int currentBufCount);
 static inline void C3Di_FrameBufBind(C3D_FrameBuf* fb);
 static inline void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
 static inline void C3Di_SetTex(int unit, C3D_Tex* tex);
@@ -61,6 +61,7 @@ static void C3Di_AptEventHook(APT_HookType hookType, C3D_UNUSED void* param)
 
 			ctx->fixedAttribDirty |= ctx->fixedAttribEverDirty;
 			ctx->gasFlags |= C3DiG_BeginAcc | C3DiG_AccStage | C3DiG_RenderStage;
+			ctx->currentBufCount = 12;
 
 			C3D_LightEnv* env = ctx->lightEnv;
 			if (ctx->fogLut)
@@ -135,7 +136,8 @@ bool C3Di_Init(size_t cmdBufSize, size_t gxQueueSize, bool doubleBuf)
 	C3D_AlphaBlend(GPU_BLEND_ADD, GPU_BLEND_ADD, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA, GPU_SRC_ALPHA, GPU_ONE_MINUS_SRC_ALPHA);
 	C3D_FragOpMode(GPU_FRAGOPMODE_GL);
 	C3D_FragOpShadow(0.0, 1.0);
-
+	
+	ctx->currentBufCount = 12;
 	ctx->texConfig = BIT(12);
 	ctx->texShadow = BIT(0);
 	ctx->texEnvBuf = 0;
@@ -262,7 +264,8 @@ void C3Di_UpdateContext(void)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_BufInfo);
 
-		C3Di_BufInfoBind(&ctx->bufInfo);
+		C3Di_BufInfoBind(&ctx->bufInfo, ctx->currentBufCount);
+		ctx->currentBufCount = ctx->bufInfo.bufCount;
 
 		C3Di_Profile_Exit_Block();
 	}
@@ -530,10 +533,11 @@ static inline void C3Di_AttrInfoBind(C3D_AttrInfo* info)
 	GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_ATTRIBUTES_PERMUTATION_LOW, (u32*)&info->permutation, 2);
 }
 
-static inline void C3Di_BufInfoBind(C3D_BufInfo* info)
+static inline void C3Di_BufInfoBind(C3D_BufInfo* info, int currentBufCount)
 {
+	int bufsToWrite = currentBufCount > info->bufCount ? currentBufCount : info->bufCount; // Max. WYATT_TODO this technically isn't kosher if the attribs are spaced out. It also isn't kosher if the BufInfos are malformed.
 	GPUCMD_AddWrite(GPUREG_ATTRIBBUFFERS_LOC, info->base_paddr >> 3);
-	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)info->buffers, sizeof(info->buffers)/sizeof(u32));
+	GPUCMD_AddIncrementalWrites_Auto(GPUREG_ATTRIBBUFFER0_OFFSET, (u32*)info->buffers, (bufsToWrite * sizeof(info->buffers[0]))/sizeof(u32));
 }
 
 static inline void C3Di_FrameBufBind(C3D_FrameBuf* fb)
