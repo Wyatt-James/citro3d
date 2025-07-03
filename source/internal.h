@@ -50,7 +50,6 @@ typedef struct
 	C3D_Effect effect;
 	C3D_LightEnv* lightEnv;
 
-	int currentBufCount;
 	u32 texConfig;
 	u32 texShadow;
 	C3D_Tex* tex[3];
