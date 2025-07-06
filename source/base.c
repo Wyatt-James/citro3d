@@ -616,7 +616,6 @@ static inline void C3Di_SetTex(int unit, C3D_Tex* tex)
 	GPUCMD_AddWrite(unit_type_reg, tex->fmt);
 }
 
-// 1326 -> 1312, plus inlined crap
 static inline void C3Di_EffectBind(C3D_Effect* e)
 {
 	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3); // 0040
