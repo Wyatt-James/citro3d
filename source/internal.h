@@ -23,13 +23,15 @@ typedef struct
 	GPU_EARLYDEPTHFUNC earlyDepthFunc;
 	u32 earlyDepthRef;
 
-	u32 alphaTest;
-	u32 stencilMode, stencilOp;
-	u32 depthTest;
-
-	u32 blendClr;
+	// Keep the order of these
 	u32 alphaBlend;
 	GPU_LOGICOP clrLogicOp;
+	u32 blendClr;
+	u32 alphaTest;
+	u32 stencilMode;
+	u32 stencilOp;
+	u32 depthTest;
+
 } C3D_Effect;
 
 typedef struct

@@ -616,22 +616,45 @@ static inline void C3Di_SetTex(int unit, C3D_Tex* tex)
 	GPUCMD_AddWrite(unit_type_reg, tex->fmt);
 }
 
+// 1326 -> 1312, plus inlined crap
 static inline void C3Di_EffectBind(C3D_Effect* e)
 {
-	GPUCMD_AddIncrementalWrites_Auto(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2);
-	GPUCMD_AddIncrementalWrites_Auto(GPUREG_FRAGOP_ALPHA_TEST, (u32*)&e->alphaTest, 4);
-	GPUCMD_AddWrite(GPUREG_DEPTHMAP_ENABLE, e->zBuffer ? 1 : 0);
-	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3);
-	GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x8, (u32)GPU_MAKEGASDEPTHFUNC((e->depthTest>>4)&7) << 24);
-	GPUCMD_AddWrite(GPUREG_BLEND_COLOR, e->blendClr);
-	GPUCMD_AddWrite(GPUREG_BLEND_FUNC, e->alphaBlend);
-	GPUCMD_AddWrite(GPUREG_LOGIC_OP, e->clrLogicOp);
-	GPUCMD_AddMaskedWrite(GPUREG_COLOR_OPERATION, 7, e->fragOpMode);
-	GPUCMD_AddWrite(GPUREG_FRAGOP_SHADOW, e->fragOpShadow);
-	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_TEST1, 1, e->earlyDepth ? 1 : 0);
-	GPUCMD_AddWrite(GPUREG_EARLYDEPTH_TEST2, e->earlyDepth ? 1 : 0);
-	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_FUNC, 1, e->earlyDepthFunc);
-	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_DATA, 0x7, e->earlyDepthRef);
+	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3); // 0040
+
+	// -4, plus inline, from inline
+	GPUCMD_AddIncrementalWrites_Inline(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2); // 004D - 004E
+
+	// -9
+	{
+		// 0061 - 0062
+		u32 data[] = {e->earlyDepthFunc, e->earlyDepth ? 1 : 0};
+		GPUCMD_AddMaskedIncrementalWrites_Inline(GPUREG_EARLYDEPTH_FUNC, 1, data, sizeof(data) / sizeof(u32));
+
+		// GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_FUNC, 1, e->earlyDepthFunc); // 0061
+		// GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_TEST1, 1, e->earlyDepth ? 1 : 0); // 0062
+	}
+
+	GPUCMD_AddMaskedWrite(GPUREG_EARLYDEPTH_DATA, 0x7, e->earlyDepthRef); // 006A
+	GPUCMD_AddWrite(GPUREG_DEPTHMAP_ENABLE, e->zBuffer ? 1 : 0); // 006D
+	GPUCMD_AddMaskedWrite(GPUREG_COLOR_OPERATION, 7, e->fragOpMode); // 0100
+
+	// -4, plus inline, from inline and bulk
+	{
+		// 0101 - 0107
+		// u32 data[] = {e->alphaBlend, e->clrLogicOp, e->blendClr, e->alphaTest, e->stencilMode, e->stencilOp, e->depthTest};
+		// GPUCMD_AddIncrementalWrites_Inline(GPUREG_BLEND_FUNC, data, sizeof(data) / sizeof(u32));
+		
+		GPUCMD_AddIncrementalWrites_Inline(GPUREG_BLEND_FUNC, (u32*) &e->alphaBlend, 7);
+
+		// GPUCMD_AddWrite(GPUREG_BLEND_FUNC, e->alphaBlend); // 0101
+		// GPUCMD_AddWrite(GPUREG_LOGIC_OP, e->clrLogicOp); // 0102
+		// GPUCMD_AddWrite(GPUREG_BLEND_COLOR, e->blendClr); // 0103
+		// GPUCMD_AddIncrementalWrites_Inline(GPUREG_FRAGOP_ALPHA_TEST, (u32*)&e->alphaTest, 4); // 0104 - 0107
+	}
+
+	GPUCMD_AddWrite(GPUREG_EARLYDEPTH_TEST2, e->earlyDepth ? 1 : 0); // 0118
+	GPUCMD_AddMaskedWrite(GPUREG_GAS_DELTAZ_DEPTH, 0x8, (u32)GPU_MAKEGASDEPTHFUNC((e->depthTest>>4)&7) << 24); // 0126
+	GPUCMD_AddWrite(GPUREG_FRAGOP_SHADOW, e->fragOpShadow); // 0130
 }
 
 static inline void C3Di_GasUpdate(C3D_Context* ctx)
