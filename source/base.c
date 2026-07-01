@@ -618,7 +618,7 @@ static inline void C3Di_SetTex(int unit, C3D_Tex* tex)
 
 static inline void C3Di_EffectBind(C3D_Effect* e)
 {
-	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3); // 0040
+	GPUCMD_AddWrite(GPUREG_FACECULLING_CONFIG, e->cullMode & 0x3);
 	GPUCMD_AddIncrementalWrites_Inline(GPUREG_DEPTHMAP_SCALE, (u32*)&e->zScale, 2);
 
 	{
