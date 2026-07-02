@@ -1,4 +1,5 @@
 #pragma once
+#include <stdbool.h>
 #include <c3d/attribs.h>
 #include <c3d/buffers.h>
 #include <c3d/proctex.h>
@@ -7,7 +8,10 @@
 #include <c3d/texenv.h>
 #include <c3d/fog.h>
 
+#include "internal_profiler.h"
+
 #define C3D_UNUSED __attribute__((unused))
+#define C3D_ASSUME if (!(cond)) __builtin_unreachable()
 
 typedef struct
 {
@@ -19,13 +23,15 @@ typedef struct
 	GPU_EARLYDEPTHFUNC earlyDepthFunc;
 	u32 earlyDepthRef;
 
-	u32 alphaTest;
-	u32 stencilMode, stencilOp;
-	u32 depthTest;
-
-	u32 blendClr;
+	// Keep the order of these
 	u32 alphaBlend;
 	GPU_LOGICOP clrLogicOp;
+	u32 blendClr;
+	u32 alphaTest;
+	u32 stencilMode;
+	u32 stencilOp;
+	u32 depthTest;
+
 } C3D_Effect;
 
 typedef struct
@@ -141,13 +147,6 @@ static inline vramAllocPos addrGetVRAMBank(const void* addr)
 }
 
 void C3Di_UpdateContext(void);
-void C3Di_AttrInfoBind(C3D_AttrInfo* info);
-void C3Di_BufInfoBind(C3D_BufInfo* info);
-void C3Di_FrameBufBind(C3D_FrameBuf* fb);
-void C3Di_TexEnvBind(int id, C3D_TexEnv* env);
-void C3Di_SetTex(int unit, C3D_Tex* tex);
-void C3Di_EffectBind(C3D_Effect* effect);
-void C3Di_GasUpdate(C3D_Context* ctx);
 
 void C3Di_LightMtlBlend(C3D_Light* light);
 

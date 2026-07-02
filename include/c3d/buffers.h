@@ -10,7 +10,7 @@ typedef struct
 typedef struct
 {
 	u32 base_paddr;
-	int bufCount;
+	int bufCount; /* If you're rolling your own allocator, bufCount should be set to the highest used buffer ID + 1 */
 	C3D_BufCfg buffers[12];
 } C3D_BufInfo;
 

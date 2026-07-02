@@ -306,16 +306,14 @@ static void C3Di_RenderTargetFinishInit(C3D_RenderTarget* target)
 	lastTarget = target;
 }
 
-C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, C3D_DEPTHTYPE depthFmt)
+C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
 {
-	GPU_DEPTHBUF depthFmtReal = GPU_RB_DEPTH16;
 	void* depthBuf = NULL;
 	void* colorBuf = vramAlloc(C3D_CalcColorBufSize(width,height,colorFmt));
 	if (!colorBuf) goto _fail0;
-	if (C3D_DEPTHTYPE_OK(depthFmt))
+	if (C3D_DepthTypeOk(depthFmt))
 	{
-		depthFmtReal = C3D_DEPTHTYPE_VAL(depthFmt);
-		size_t depthSize = C3D_CalcDepthBufSize(width,height,depthFmtReal);
+		size_t depthSize = C3D_CalcDepthBufSize(width,height,depthFmt);
 		vramAllocPos vramBank = addrGetVRAMBank(colorBuf);
 		depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
 		if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
@@ -331,7 +329,7 @@ C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF col
 	target->ownsColor = true;
 	if (depthBuf)
 	{
-		C3D_FrameBufDepth(fb, depthBuf, depthFmtReal);
+		C3D_FrameBufDepth(fb, depthBuf, depthFmt);
 		target->ownsDepth = true;
 	}
 	C3Di_RenderTargetFinishInit(target);
@@ -345,7 +343,7 @@ _fail0:
 	return NULL;
 }
 
-C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, C3D_DEPTHTYPE depthFmt)
+C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, GPU_DEPTHBUF depthFmt)
 {
 	if (!addrIsVRAM(tex->data)) return NULL; // Render targets must be in VRAM
 	C3D_RenderTarget* target = C3Di_RenderTargetNew();
@@ -354,10 +352,9 @@ C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, 
 	C3D_FrameBuf* fb = &target->frameBuf;
 	C3D_FrameBufTex(fb, tex, face, level);
 
-	if (C3D_DEPTHTYPE_OK(depthFmt))
+	if (C3D_DepthTypeOk(depthFmt))
 	{
-		GPU_DEPTHBUF depthFmtReal = C3D_DEPTHTYPE_VAL(depthFmt);
-		size_t depthSize = C3D_CalcDepthBufSize(fb->width,fb->height,depthFmtReal);
+		size_t depthSize = C3D_CalcDepthBufSize(fb->width,fb->height,depthFmt);
 		vramAllocPos vramBank = addrGetVRAMBank(tex->data);
 		void* depthBuf = vramAllocAt(depthSize, vramBank ^ VRAM_ALLOC_ANY); // Attempt opposite bank first...
 		if (!depthBuf) depthBuf = vramAllocAt(depthSize, vramBank); // ... if that fails, attempt same bank
@@ -367,7 +364,7 @@ C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, 
 			return NULL;
 		}
 
-		C3D_FrameBufDepth(fb, depthBuf, depthFmtReal);
+		C3D_FrameBufDepth(fb, depthBuf, depthFmt);
 		target->ownsDepth = true;
 	}
 
@@ -481,5 +478,18 @@ void C3D_SyncMemoryFill(u32* buf0a, u32 buf0v, u32* buf0e, u16 control0, u32* bu
 	{
 		C3Di_SafeMemoryFill(buf0a, buf0v, buf0e, control0, buf1a, buf1v, buf1e, control1);
 		gspWaitForPSC0();
+	}
+}
+
+// C3D_DEPTH_NONE should always be maintained as false.
+bool C3D_DepthTypeOk(GPU_DEPTHBUF depthFmt)
+{
+	switch (depthFmt) {
+		case GPU_RB_DEPTH16:
+		case GPU_RB_DEPTH24:
+		case GPU_RB_DEPTH24_STENCIL8:
+			return true;
+		default:
+			return false;
 	}
 }

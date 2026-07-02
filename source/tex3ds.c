@@ -23,6 +23,7 @@
 /** @file tex3ds.c
  *  @brief Tex3DS routines
  */
+#include "internal.h"
 #include <tex3ds.h>
 #include <stdio.h>
 #include <stdlib.h>

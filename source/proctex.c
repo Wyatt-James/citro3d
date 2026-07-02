@@ -150,7 +150,7 @@ void C3Di_ProcTexUpdate(C3D_Context* ctx)
 	{
 		ctx->flags &= ~C3DiF_ProcTex;
 		if (ctx->procTex)
-			GPUCMD_AddIncrementalWrites(GPUREG_TEXUNIT3_PROCTEX0, (u32*)ctx->procTex, 6);
+			GPUCMD_AddIncrementalWrites_Auto(GPUREG_TEXUNIT3_PROCTEX0, (u32*)ctx->procTex, 6);
 	}
 	if (ctx->flags & C3DiF_ProcTexLutAll)
 	{
@@ -162,7 +162,7 @@ void C3Di_ProcTexUpdate(C3D_Context* ctx)
 				continue;
 
 			GPUCMD_AddWrite(GPUREG_PROCTEX_LUT, j<<8);
-			GPUCMD_AddWrites(GPUREG_PROCTEX_LUT_DATA0, *ctx->procTexLut[i], 128);
+			GPUCMD_AddWrites_Auto(GPUREG_PROCTEX_LUT_DATA0, *ctx->procTexLut[i], 128);
 		}
 		ctx->flags &= ~C3DiF_ProcTexLutAll;
 	}
@@ -172,9 +172,9 @@ void C3Di_ProcTexUpdate(C3D_Context* ctx)
 		if (ctx->procTexColorLut)
 		{
 			GPUCMD_AddWrite(GPUREG_PROCTEX_LUT, GPU_LUT_COLOR<<8);
-			GPUCMD_AddWrites(GPUREG_PROCTEX_LUT_DATA0, ctx->procTexColorLut->color, 256);
+			GPUCMD_AddWrites_Auto(GPUREG_PROCTEX_LUT_DATA0, ctx->procTexColorLut->color, 256);
 			GPUCMD_AddWrite(GPUREG_PROCTEX_LUT, GPU_LUT_COLORDIF<<8);
-			GPUCMD_AddWrites(GPUREG_PROCTEX_LUT_DATA0, ctx->procTexColorLut->diff, 256);
+			GPUCMD_AddWrites_Auto(GPUREG_PROCTEX_LUT_DATA0, ctx->procTexColorLut->diff, 256);
 		}
 	}
 }

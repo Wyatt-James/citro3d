@@ -1,6 +1,8 @@
 #pragma once
 #include "framebuffer.h"
 
+#define C3D_DEPTH_NONE ((GPU_DEPTHBUF) 255) // A guaranteed value that tells C3D_RenderTargetCreate not to allocate a depth buffer.
+
 typedef struct C3D_RenderTarget_tag C3D_RenderTarget;
 
 struct C3D_RenderTarget_tag
@@ -39,29 +41,13 @@ void C3D_FrameEndHook(void (* hook)(void*), void* param);
 float C3D_GetDrawingTime(void);
 float C3D_GetProcessingTime(void);
 
-#if defined(__GNUC__) && !defined(__cplusplus)
-typedef union __attribute__((__transparent_union__))
-{
-	int __i;
-	GPU_DEPTHBUF __e;
-} C3D_DEPTHTYPE;
-#else
-union C3D_DEPTHTYPE
-{
-private:
-	int __i;
-	GPU_DEPTHBUF __e;
-public:
-	C3D_DEPTHTYPE(GPU_DEPTHBUF e) : __e(e) {}
-	C3D_DEPTHTYPE(int i) : __i(-1) { (void)i; }
-};
-#endif
+bool C3D_DepthTypeOk(GPU_DEPTHBUF depthFmt);
 
-#define C3D_DEPTHTYPE_OK(_x)  ((_x).__i >= 0)
-#define C3D_DEPTHTYPE_VAL(_x) ((_x).__e)
+#define C3D_DEPTHTYPE_OK(_fmt)  (C3D_DepthTypeOk(_fmt))
+#define C3D_DEPTHTYPE_VAL(_fmt) (_fmt) // Deprecated: the transparent enum has been removed
 
-C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, C3D_DEPTHTYPE depthFmt);
-C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, C3D_DEPTHTYPE depthFmt);
+C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt);
+C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, GPU_DEPTHBUF depthFmt);
 void C3D_RenderTargetDelete(C3D_RenderTarget* target);
 void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx3dSide_t side, u32 transferFlags);
 

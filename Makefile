@@ -27,6 +27,16 @@ DATA		:=	data
 INCLUDES	:=	include
 
 #---------------------------------------------------------------------------------
+# Toggleable build flags. These should be set when calling Make.
+# These flags are passed automatically to the recursive Make invocations.
+#---------------------------------------------------------------------------------
+ENABLE_PROFILER	:=	0
+ENABLE_LTO	:=	0
+GPUCMD_ENABLE_BOUNDS_CHECKS	:=	1
+GPUCMD_ENABLE_ZERO_PADDING	:=	0
+GPUCMD_INLINE_THRESH	:=	6
+
+#---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
@@ -35,7 +45,45 @@ CFLAGS	:=	-g -Wall -Wno-sizeof-array-div -Werror -mword-relocations \
 			-ffunction-sections -fdata-sections \
 			$(ARCH) $(BUILD_CFLAGS)
 
+CFLAGS	+=	-save-temps=obj
 CFLAGS	+=	$(INCLUDE) -D__3DS__ -DCITRO3D_BUILD
+
+# Avoid overhead of bounds checks, and improve the compiler's
+# optimization by staying within the translation unit.
+ifeq ($(GPUCMD_ENABLE_BOUNDS_CHECKS),1)
+$(info GPUCMD bounds checks are enabled.)
+CFLAGS	+=	-DGPUCMD_ENABLE_BOUNDS_CHECKS
+else
+$(info GPUCMD bounds checks are disabled.)
+endif
+
+# If enabled, GPU commands of odd lengths will be padded with zeros. If disabled, the padding is undefined.
+ifeq ($(GPUCMD_ENABLE_ZERO_PADDING),1)
+$(info GPUCMD Zero-Padding is enabled.)
+CFLAGS	+=	-DGPUCMD_ENABLE_ZERO_PADDING
+else
+$(info GPUCMD Zero-Padding is disabled.)
+endif
+
+# Enable link-time optimization
+ifeq ($(ENABLE_LTO),1)
+$(info Link-time Optimization is enabled.)
+CFLAGS	+=	-flto
+else
+$(info Link-time Optimization is disabled.)
+endif
+
+# Automatically inline GPUCMD_Add*_Auto calls <= this threshold.
+$(info GPUCMD Inline Threshold is $(GPUCMD_INLINE_THRESH).)
+CFLAGS	+=	-DGPUCMD_INLINE_THRESH=$(GPUCMD_INLINE_THRESH)
+
+# Enable or disable C3D profiler hooks at compile-time.
+ifeq ($(ENABLE_PROFILER),1)
+CFLAGS	+=	-DCITRO3D_BUILD_PROFILER
+$(info Profiler is enabled.)
+else
+$(info Profiler is disabled.)
+endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
