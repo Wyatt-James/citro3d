@@ -406,7 +406,7 @@ void C3Di_UpdateContext(void)
 		C3Di_Profile_Exit_Block();
 	}
 
-	ctx->flags &=
+	ctx->flags = flags &
 		~(C3DiF_FrameBuf  |
 		  C3DiF_DrawUsed  |
 		  C3DiF_Viewport  |
