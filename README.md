@@ -25,9 +25,9 @@ list to reduce blocking during command list creation. Feature by derrekr.
   - `ENABLE_PROFILER (Default: 0)`: enables profiling of C3D internals.
   Overhead is very high and accuracy is limited, so this setting is
   only useful for development of C3D itself.
-  - `GPUCMD_ENABLE_BOUNDS_CHECKS (Default 1)`:
-  If 1, the GPU driver will avoid exceeding the bounds of its buffer.
-  If 0, this functionality is disabled. Disabling this can cause memory
+  - `GPUCMD_DISABLE_BOUNDS_CHECKS (Default 0)`:
+  If 0, the GPU driver will avoid exceeding the bounds of its buffer.
+  If 1, this functionality is disabled. Disabling this can cause memory
   corruption if the buffer is not large enough! See Footnote 1.
   - `GPUCMD_ENABLE_ZERO_PADDING (Default: 0)`:
   If 1, the GPU driver will pad odd-sized GPU commands with zeroes,
