@@ -25,19 +25,20 @@ list to reduce blocking during command list creation. Feature by derrekr.
   - `ENABLE_PROFILER (Default: 0)`: enables profiling of C3D internals.
   Overhead is very high and accuracy is limited, so this setting is
   only useful for development of C3D itself.
-  - `GPUCMD_DISABLE_BOUNDS_CHECKS (Default: 0, checks enabled)`:
-  If 1, disables bounds checking in the GPU driver. This can cause
-  memory corruption if the queue is not large enough! See Footnote 1.
-  - `GPUCMD_ENABLE_ZERO_PADDING (Default: 0, padding not zeroed)`:
-  If 1, pads odd-sized GPU commands with zeroes, mirroring stock
-  libctru behavior. Disabling this still aligns commands, but padding
-  data is not zeroed. This seems to be safe and improves performance.
-  See Footnote 1.
-  - `GPUCMD_INLINE_THRESH (Default: 6)`: adjusts the auto-inline
-  threshold for applicable GPU driver calls. Writes smaller or
-  equal to this number are inlined to improve performance. Set to -1
-  to disable.
-  - `ENABLE_LTO (Default: 0)`: enables building C3D itself with LTO.
+  - `GPUCMD_ENABLE_BOUNDS_CHECKS (Default 1)`:
+  If 1, the GPU driver will avoid exceeding the bounds of its buffer.
+  If 0, this functionality is disabled. Disabling this can cause memory
+  corruption if the buffer is not large enough! See Footnote 1.
+  - `GPUCMD_ENABLE_ZERO_PADDING (Default: 0)`:
+  If 1, the GPU driver will pad odd-sized GPU commands with zeroes,
+  mirroring stock libctru behavior. If 0, commands are still aligned,
+  but padding data is not zeroed. This seems to be safe and improves
+  performance. See Footnote 1.
+  - `GPUCMD_INLINE_THRESH (Default: 6)`: Adjusts the auto-inline
+  threshold for applicable GPU driver calls. Writes smaller or equal
+  to this number are inlined to improve performance. Set to -1 to
+  disable. See Footnote 1.
+  - `ENABLE_LTO (Default: 0)`: Enables building C3D itself with LTO.
 
 Footnote 1: This build flag is a direct mirror of one in libctru. Care
 should be taken to ensure that these are synchronized between the two.
