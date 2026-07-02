@@ -1,26 +1,17 @@
-# How to Modify Your Codebase For This Fork
-
-- Use constants for GPU float shader uniform locations. Picasso can
-output these in custom header files. This improves inlining
-tremendously.
-- Find out how large your command lists actually are, then disable
-GPUCMD bounds checks. See below.
-- Enable LTO at C3D build time for a small speedup.
-
 # Differences to Normal C3D
 
 - [My libctru fork](https://github.com/Wyatt-James/libctru/) is
 **REQUIRED** to build. It is expected to be installed in-place of
-the normal libctru release. Docker or an equivalent is recommended.
-- Dual command queues: C3D_Init can now set up dual command queues
-to reduce blocking caused by CPU render time. Feature by derrekr.
+the normal libctru release and must be built before C3D. Docker
+or an equivalent is recommended.
+- Dual command queues: C3D_InitEx can initialize a second GPU command
+list to reduce blocking during command list creation. Feature by derrekr.
 - API changes
-  - C3D_DEPTHTYPE has been removed from render target creation. It
-  was an awkward feature that tended to break if not used very
-  carefully. C3D_RenderTargetCreate now accepts a normal GPU_DEPTHBUF
-  parameter.
+  - C3D_DEPTHTYPE has been removed. It was an awkward feature that
+  tended to break if not used very carefully. C3D_RenderTargetCreate
+  now accepts a normal GPU_DEPTHBUF parameter.
 - General optimizations
-  - Float Uniforms are much faster, as their dirty states are tracked
+  - Float uniforms are much faster, as their dirty states are tracked
   in a bitfield instead of a bool array.
   - Geometry shader uniforms are not sent to the GPU when there is
   no active geoshader.
@@ -30,21 +21,42 @@ to reduce blocking caused by CPU render time. Feature by derrekr.
   be slightly larger, but C3D_BufInfo and C3D_Effect are now smaller.
   - Other miscellaneous small improvements have been made to uniforms
   and binding.
-- Build flags: set in the makefile but can be overridden by passing
-arguments to make.
+- The following build flags were added to the Makefile:
   - `ENABLE_PROFILER (Default: 0)`: enables profiling of C3D internals.
-  Very high overhead and limited accuracy, so only useful for
-  development of C3D itself.
-  - `ENABLE_LTO (Default: 0)`: enables building C3D itself with LTO.
+  Overhead is very high and accuracy is limited, so this setting is
+  only useful for development of C3D itself.
   - `GPUCMD_DISABLE_BOUNDS_CHECKS (Default: 0, checks enabled)`:
-  disables bounds checking in the libctru GPU driver. This can cause
-  memory corruption if the queue is not large enough!
+  If 1, disables bounds checking in the GPU driver. This can cause
+  memory corruption if the queue is not large enough! See Footnote 1.
   - `GPUCMD_ENABLE_ZERO_PADDING (Default: 0, padding not zeroed)`:
-  pads odd-sized GPU commands with zeroes, a stock libctru feature.
-  Disabling this seems to be safe and improves performance.
+  If 1, pads odd-sized GPU commands with zeroes, mirroring stock
+  libctru behavior. Disabling this still aligns commands, but padding
+  data is not zeroed. This seems to be safe and improves performance.
+  See Footnote 1.
   - `GPUCMD_INLINE_THRESH (Default: 6)`: adjusts the auto-inline
   threshold for applicable GPU driver calls. Writes smaller or
-  equal to this number are inlined to improve performance.
+  equal to this number are inlined to improve performance. Set to -1
+  to disable.
+  - `ENABLE_LTO (Default: 0)`: enables building C3D itself with LTO.
+
+Footnote 1: This build flag is a direct mirror of one in libctru. Care
+should be taken to ensure that these are synchronized between the two.
+
+# How to Modify Your Codebase For This Fork
+
+Your project may not build correctly at first. The issue is likely
+caused by be the removal of C3D_DEPTHTYPE. Use C3D_DEPTH_NONE
+in-place of -1 to skip allocating a depth buffer.
+
+To achieve the best performance, you should:
+- Find out how big your project's GPU command lists actually are,
+ensure that buffers are large enough, and disable GPUCMD bounds checks.
+- Use constants for vertex shader uniform locations. Picasso can
+output these in custom header files. This improves inlining
+tremendously.
+- Ensure that vertex shader float uniforms that are frequently updated
+together have contiguous uniform locations.
+- Enable LTO at build time for a small speedup.
 
 # Setup
 
