@@ -306,7 +306,7 @@ static void C3Di_RenderTargetFinishInit(C3D_RenderTarget* target)
 	lastTarget = target;
 }
 
-C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, GPU_DEPTHBUF depthFmt)
+C3D_RenderTarget* C3D_RenderTargetCreate(int width, int height, GPU_COLORBUF colorFmt, C3D_DEPTHTYPE depthFmt)
 {
 	void* depthBuf = NULL;
 	void* colorBuf = vramAlloc(C3D_CalcColorBufSize(width,height,colorFmt));
@@ -343,7 +343,7 @@ _fail0:
 	return NULL;
 }
 
-C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, GPU_DEPTHBUF depthFmt)
+C3D_RenderTarget* C3D_RenderTargetCreateFromTex(C3D_Tex* tex, GPU_TEXFACE face, int level, C3D_DEPTHTYPE depthFmt)
 {
 	if (!addrIsVRAM(tex->data)) return NULL; // Render targets must be in VRAM
 	C3D_RenderTarget* target = C3Di_RenderTargetNew();
@@ -482,7 +482,7 @@ void C3D_SyncMemoryFill(u32* buf0a, u32 buf0v, u32* buf0e, u16 control0, u32* bu
 }
 
 // C3D_DEPTH_NONE should always be maintained as false.
-bool C3D_DepthTypeOk(GPU_DEPTHBUF depthFmt)
+bool C3D_DepthTypeOk(C3D_DEPTHTYPE depthFmt)
 {
 	switch (depthFmt) {
 		case GPU_RB_DEPTH16:
