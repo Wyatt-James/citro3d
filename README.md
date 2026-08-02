@@ -7,9 +7,11 @@ or an equivalent is recommended.
 - Dual command queues: C3D_InitEx can initialize a second GPU command
 list to reduce blocking during command list creation. Feature by derrekr.
 - API changes
-  - C3D_DEPTHTYPE has been removed. It was an awkward feature that
-  tended to break if not used very carefully. C3D_RenderTargetCreate
-  now accepts a normal GPU_DEPTHBUF parameter.
+  - C3D_DEPTHTYPE has been replaced with a simple int typedef. It
+  was an awkward feature that tended to break if not used very
+  carefully. A #define has also been added for a value guaranteed
+  to not allocate a depth buffer. This *should* be compatible but I
+  have not tested it in C++.
 - General optimizations
   - Float uniforms are much faster, as their dirty states are tracked
   in a bitfield instead of a bool array.
@@ -44,10 +46,6 @@ Footnote 1: This build flag is a direct mirror of one in libctru. Care
 should be taken to ensure that these are synchronized between the two.
 
 # How to Modify Your Codebase For This Fork
-
-Your project may not build correctly at first. The issue is likely
-caused by be the removal of C3D_DEPTHTYPE. Use C3D_DEPTH_NONE
-in-place of -1 to skip allocating a depth buffer.
 
 To achieve the best performance, you should:
 - Find out how big your project's GPU command lists actually are,
