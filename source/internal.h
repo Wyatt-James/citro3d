@@ -12,6 +12,7 @@
 
 #define C3D_UNUSED __attribute__((unused))
 #define C3D_ASSUME if (!(cond)) __builtin_unreachable()
+#define C3D_ALIGNED(n_) __attribute__((aligned(n_)))
 
 typedef struct
 {
