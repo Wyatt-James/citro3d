@@ -46,7 +46,7 @@ void C3D_GasBeginAcc(void)
 	if (!(ctx->flags & C3DiF_Active))
 		return;
 
-	ctx->gasFlags |= C3DiG_BeginAcc;
+	ctx->gasConfig.flags |= C3DiG_BeginAcc;
 }
 
 void C3D_GasDeltaZ(float value)
@@ -57,8 +57,8 @@ void C3D_GasDeltaZ(float value)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasDeltaZ = (u32)(value*0x100);
-	ctx->gasFlags |= C3DiG_AccStage;
+	ctx->gasConfig.deltaZ = (u32)(value*0x100);
+	ctx->gasConfig.flags |= C3DiG_AccStage;
 }
 
 void C3D_GasAccMax(float value)
@@ -69,8 +69,8 @@ void C3D_GasAccMax(float value)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasAccMax = f32tof16(1.0f / value);
-	ctx->gasFlags |= C3DiG_SetAccMax;
+	ctx->gasConfig.accMax = f32tof16(1.0f / value);
+	ctx->gasConfig.flags |= C3DiG_SetAccMax;
 }
 
 void C3D_GasAttn(float value)
@@ -81,8 +81,8 @@ void C3D_GasAttn(float value)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasAttn = f32tof16(value);
-	ctx->gasFlags |= C3DiG_RenderStage;
+	ctx->gasConfig.attn = f32tof16(value);
+	ctx->gasConfig.flags |= C3DiG_RenderStage;
 }
 
 void C3D_GasLightPlanar(float min, float max, float attn)
@@ -93,8 +93,8 @@ void C3D_GasLightPlanar(float min, float max, float attn)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasLightXY = conv_u8(min,0) | conv_u8(max,8) | conv_u8(attn,16);
-	ctx->gasFlags |= C3DiG_RenderStage;
+	ctx->gasConfig.lightXY = conv_u8(min,0) | conv_u8(max,8) | conv_u8(attn,16);
+	ctx->gasConfig.flags |= C3DiG_RenderStage;
 }
 
 void C3D_GasLightView(float min, float max, float attn)
@@ -105,8 +105,8 @@ void C3D_GasLightView(float min, float max, float attn)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasLightZ = conv_u8(min,0) | conv_u8(max,8) | conv_u8(attn,16);
-	ctx->gasFlags |= C3DiG_RenderStage;
+	ctx->gasConfig.lightZ = conv_u8(min,0) | conv_u8(max,8) | conv_u8(attn,16);
+	ctx->gasConfig.flags |= C3DiG_RenderStage;
 }
 
 void C3D_GasLightDirection(float dotp)
@@ -117,9 +117,9 @@ void C3D_GasLightDirection(float dotp)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasLightZColor &= ~0xFF;
-	ctx->gasLightZColor |= conv_u8(dotp,0);
-	ctx->gasFlags |= C3DiG_RenderStage;
+	ctx->gasConfig.lightZColor &= ~0xFF;
+	ctx->gasConfig.lightZColor |= conv_u8(dotp,0);
+	ctx->gasConfig.flags |= C3DiG_RenderStage;
 }
 
 void C3D_GasLutInput(GPU_GASLUTINPUT input)
@@ -130,9 +130,9 @@ void C3D_GasLutInput(GPU_GASLUTINPUT input)
 		return;
 
 	ctx->flags |= C3DiF_Gas;
-	ctx->gasLightZColor &= ~0x100;
-	ctx->gasLightZColor |= (input&1)<<8;
-	ctx->gasFlags |= C3DiG_RenderStage;
+	ctx->gasConfig.lightZColor &= ~0x100;
+	ctx->gasConfig.lightZColor |= (input&1)<<8;
+	ctx->gasConfig.flags |= C3DiG_RenderStage;
 }
 
 void C3D_GasLutBind(C3D_GasLut* lut)

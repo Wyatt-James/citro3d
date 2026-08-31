@@ -127,9 +127,19 @@ static inline bool C3D_TexInitShadowCube(C3D_Tex* tex, C3D_TexCube* cube, u16 wi
 		(C3D_TexInitParams){ width, height, 0, GPU_RGBA8, GPU_TEX_SHADOW_CUBE, true });
 }
 
-static inline GPU_TEXTURE_MODE_PARAM C3D_TexGetType(C3D_Tex* tex)
+static inline GPU_TEXTURE_MODE_PARAM C3D_TexGetType(const C3D_Tex* tex)
 {
 	return (GPU_TEXTURE_MODE_PARAM)((tex->param>>28)&0x7);
+}
+
+static inline bool C3D_TexTypeIsCube(GPU_TEXTURE_MODE_PARAM type)
+{
+	return type == GPU_TEX_CUBE_MAP || type == GPU_TEX_SHADOW_CUBE;
+}
+
+static inline bool C3D_TexIs2D(const C3D_Tex* tex)
+{
+	return !C3D_TexTypeIsCube(C3D_TexGetType(tex));
 }
 
 static inline void* C3D_TexGetImagePtr(C3D_Tex* tex, void* data, int level, u32* size)

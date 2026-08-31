@@ -1,25 +1,10 @@
 #include "internal.h"
+#include <c3d/gpucmd.h>
 
 void C3D_ImmDrawBegin(GPU_Primitive_t primitive)
 {
-	C3Di_UpdateContext();
-
-	C3Di_Profile_Enter_Block(C3D_ProfilerSlot_ImmediateDraw);
-
-	// Set primitive type
-	GPUCMD_AddMaskedWrite(GPUREG_PRIMITIVE_CONFIG, 2, primitive);
-	// Start a new primitive (breaks off a triangle strip/fan)
-	GPUCMD_AddWrite(GPUREG_RESTART_PRIMITIVE, 1);
-	// Not sure if this command is necessary
-	GPUCMD_AddWrite(GPUREG_INDEXBUFFER_CONFIG, 0x80000000);
-	// Enable vertex submission mode
-	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG2, 1, 1);
-	// Enable drawing mode
-	GPUCMD_AddMaskedWrite(GPUREG_START_DRAW_FUNC0, 1, 0);
-	// Begin immediate-mode vertex submission
-	GPUCMD_AddWrite(GPUREG_FIXEDATTRIB_INDEX, 0xF);
-	
-	C3Di_Profile_Exit_Block();
+	C3D_UpdateContext();
+	C3D_SendImmDrawBegin(primitive);
 }
 
 static inline void write24(u8* p, u32 val)
@@ -44,8 +29,8 @@ void C3D_ImmSendAttrib(float x, float y, float z, float w)
 	} param;
 
 	// Convert the values to float24
-	write24(param.x, f32tof24(x));
 	write24(param.y, f32tof24(y));
+	write24(param.x, f32tof24(x));
 	write24(param.z, f32tof24(z));
 	write24(param.w, f32tof24(w));
 
@@ -60,12 +45,6 @@ void C3D_ImmSendAttrib(float x, float y, float z, float w)
 
 void C3D_ImmDrawEnd(void)
 {
-	// Go back to configuration mode
-	GPUCMD_AddMaskedWrite(GPUREG_START_DRAW_FUNC0, 1, 1);
-	// Disable vertex submission mode
-	GPUCMD_AddMaskedWrite(GPUREG_GEOSTAGE_CONFIG2, 1, 0);
-	// Clear the post-vertex cache
-	GPUCMD_AddWrite(GPUREG_VTX_FUNC, 1);
-
+	C3D_SendImmDrawEnd();
 	C3Di_GetContext()->flags |= C3DiF_DrawUsed;
 }

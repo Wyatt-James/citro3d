@@ -44,22 +44,7 @@ void C3D_TexEnvBufUpdate(int mode, int mask)
 	if (!(ctx->flags & C3DiF_Active))
 		return;
 
-	u32 val = ctx->texEnvBuf;
-	mask &= 0xF;
-
-	if (mode & C3D_RGB)
-	{
-		val &= ~(0xF << 8);
-		val |= mask << 8;
-	}
-
-	if (mode & C3D_Alpha)
-	{
-		val &= ~(0xF << 12);
-		val |= mask << 12;
-	}
-
-	ctx->texEnvBuf = val;
+	C3D_SetTexEnvBufUpdate(&ctx->texEnvBuf, mode, mask);
 	ctx->flags |= C3DiF_TexEnvBuf;
 }
 
@@ -70,6 +55,6 @@ void C3D_TexEnvBufColor(u32 color)
 	if (!(ctx->flags & C3DiF_Active))
 		return;
 
-	ctx->texEnvBufClr = color;
+	C3D_SetTexEnvBufColor(&ctx->texEnvBufClr, color);
 	ctx->flags |= C3DiF_TexEnvBuf;
 }

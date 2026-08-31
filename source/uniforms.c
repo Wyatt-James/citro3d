@@ -1,5 +1,6 @@
 #include "internal.h"
 #include <c3d/uniforms.h>
+#include <c3d/gpucmd.h>
 #include <stdint.h>
 #include <stddef.h>
 
@@ -32,7 +33,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		for (i = 0; i < C3Di_ShaderFVecData[type].count; i++)
 		{
 			float24Uniform_s* u = &C3Di_ShaderFVecData[type].data[i];
-			GPUCMD_AddIncrementalWrites_Auto(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, (u32*)u, 4);
+			C3D_SendF24Unif(u, offset);
 			C3D_RegClean(C3D_FVUnifDirty[type], u->id, 1);
 		}
 		C3Di_ShaderFVecData[type].dirty = false;
@@ -51,8 +52,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 				const u32 first_dirty = (word * 32) + regs_this_word;
 				const u32 next_clean = first_dirty + dirty_regs;
 				
-				GPUCMD_AddWrite(GPUREG_VSH_FLOATUNIFORM_CONFIG+offset, 0x80000000 | first_dirty);
-				GPUCMD_AddWrites_Auto(GPUREG_VSH_FLOATUNIFORM_DATA+offset, (u32*) &C3D_FVUnif[type][first_dirty], (next_clean - first_dirty) * 4);
+				C3D_SendFVUnifs(offset, first_dirty, &C3D_FVUnif[type][first_dirty], next_clean - first_dirty);
 				regs_this_word += dirty_regs;
 			}
 			else // First bit is clear: clean reg
@@ -75,7 +75,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		{
 			if (C3D_IVUnifDirty[type] & BIT(i))
 			{
-				GPUCMD_AddWrite(GPUREG_VSH_INTUNIFORM_I0+offset+i, C3D_IVUnif[type][i]);
+				C3D_SendIntUnif(&C3D_IVUnif[type][i], offset, i);
 			}
 		}
 		C3D_IVUnifDirty[type] = 0;
@@ -84,7 +84,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	// Update bool uniforms
 	if (C3D_BoolUnifsDirty[type])
 	{
-		GPUCMD_AddWrite(GPUREG_VSH_BOOLUNIFORM+offset, 0x7FFF0000 | C3D_BoolUnifs[type]);
+		C3D_SendBoolUnifs(C3D_BoolUnifs[type], offset);
 		C3D_BoolUnifsDirty[type] = false;
 	}
 }

@@ -51,8 +51,7 @@ void C3D_FogGasMode(GPU_FOGMODE fogMode, GPU_GASMODE gasMode, bool zFlip)
 		return;
 
 	ctx->flags |= C3DiF_TexEnvBuf;
-	ctx->texEnvBuf &= ~0x100FF;
-	ctx->texEnvBuf |= (fogMode&7) | ((gasMode&1)<<3) | (zFlip ? BIT(16) : 0);
+	C3D_SetFogGasMode(&ctx->texEnvBuf, fogMode, gasMode, zFlip);
 }
 
 void C3D_FogColor(u32 color)

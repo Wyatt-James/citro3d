@@ -23,7 +23,7 @@ static void C3Di_LightLutUpload(u32 config, C3D_LightLut* lut)
 		GPUCMD_AddWrites_Auto(GPUREG_LIGHTING_LUT_DATA0, &lut->data[i], 8);
 }
 
-static void C3Di_LightEnvSelectLayer(C3D_LightEnv* env)
+static void C3Di_LightEnvSelectLayer(C3D_LightEnv* env, u32 envFlags)
 {
 	static const u8 layer_enabled[] =
 	{
@@ -42,7 +42,7 @@ static void C3Di_LightEnvSelectLayer(C3D_LightEnv* env)
 	reg = (reg >> 16) & 0xFF;
 
 	int i = 7;
-	if (!(env->flags & C3DF_LightEnv_IsCP_Any))
+	if (!(envFlags & C3DF_LightEnv_IsCP_Any))
 		for (i = 0; i < 7; i ++)
 			if ((layer_enabled[i] & reg) == reg) // Check if the layer supports all LUTs we need
 				break;
@@ -53,8 +53,9 @@ void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 {
 	int i;
 	C3D_LightEnvConf* conf = &env->conf;
+	const u32 envFlags = env->flags;
 
-	if (env->flags & C3DF_LightEnv_LCDirty)
+	if (envFlags & C3DF_LightEnv_LCDirty)
 	{
 		conf->numLights = 0;
 		conf->permutation = 0;
@@ -66,28 +67,25 @@ void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 			conf->permutation |= GPU_LIGHTPERM(conf->numLights++, i);
 		}
 		if (conf->numLights > 0) conf->numLights --;
-		env->flags &= ~C3DF_LightEnv_LCDirty;
 		env->flags |= C3DF_LightEnv_Dirty;
 	}
 
-	if (env->flags & C3DF_LightEnv_MtlDirty)
+	if (envFlags & C3DF_LightEnv_MtlDirty)
 	{
 		C3Di_LightEnvMtlBlend(env);
-		env->flags &= ~C3DF_LightEnv_MtlDirty;
-		env->flags |= C3DF_LightEnv_Dirty;
 	}
 
-	if (env->flags & C3DF_LightEnv_Dirty)
+	if (envFlags & C3DF_LightEnv_Dirty)
 	{
-		C3Di_LightEnvSelectLayer(env);
+		C3Di_LightEnvSelectLayer(env, envFlags);
 		GPUCMD_AddWrite(GPUREG_LIGHTING_AMBIENT, conf->ambient);
 		GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHTING_NUM_LIGHTS, (u32*)&conf->numLights, 3);
 		GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHTING_LUTINPUT_ABS, (u32*)&conf->lutInput, 3);
 		GPUCMD_AddWrite(GPUREG_LIGHTING_LIGHT_PERMUTATION, conf->permutation);
-		env->flags &= ~C3DF_LightEnv_Dirty;
 	}
 
-	if (env->flags & C3DF_LightEnv_LutDirtyAll)
+
+	if (envFlags & C3DF_LightEnv_LutDirtyAll)
 	{
 		for (i = 0; i < 6; i ++)
 		{
@@ -95,39 +93,37 @@ void C3Di_LightEnvUpdate(C3D_LightEnv* env)
 			if (!(env->flags & C3DF_LightEnv_LutDirty(i))) continue;
 			C3Di_LightLutUpload(GPU_LIGHTLUTIDX(GPU_LUTSELECT_COMMON, (u32)lutIds[i], 0), env->luts[i]);
 		}
-
-		env->flags &= ~C3DF_LightEnv_LutDirtyAll;
 	}
+
+	env->flags = envFlags & ~(C3DF_LightEnv_Dirty | C3DF_LightEnv_MtlDirty | C3DF_LightEnv_LCDirty | C3DF_LightEnv_LutDirtyAll);
 
 	for (i = 0; i < 8; i ++)
 	{
 		C3D_Light* light = env->lights[i];
+		const u16 lightFlags = light->flags;
 		if (!light) continue;
 
-		if (light->flags & C3DF_Light_MatDirty)
+		if (lightFlags & C3DF_Light_MatDirty)
 		{
 			C3Di_LightMtlBlend(light);
-			light->flags &= ~C3DF_Light_MatDirty;
-			light->flags |= C3DF_Light_Dirty;
 		}
 
-		if (light->flags & C3DF_Light_Dirty)
+		if (lightFlags & (C3DF_Light_Dirty | C3DF_Light_MatDirty))
 		{
 			GPUCMD_AddIncrementalWrites_Auto(GPUREG_LIGHT0_SPECULAR0 + i*0x10, (u32*)&light->conf, 12);
-			light->flags &= ~C3DF_Light_Dirty;
 		}
 
-		if (light->flags & C3DF_Light_SPDirty)
+		if (lightFlags & C3DF_Light_SPDirty)
 		{
 			C3Di_LightLutUpload(GPU_LIGHTLUTIDX(GPU_LUTSELECT_SP, i, 0), light->lut_SP);
-			light->flags &= ~C3DF_Light_SPDirty;
 		}
 
-		if (light->flags & C3DF_Light_DADirty)
+		if (lightFlags & C3DF_Light_DADirty)
 		{
 			C3Di_LightLutUpload(GPU_LIGHTLUTIDX(GPU_LUTSELECT_DA, i, 0), light->lut_DA);
-			light->flags &= ~C3DF_Light_DADirty;
 		}
+
+		light->flags = lightFlags & ~(C3DF_Light_MatDirty | C3DF_Light_Dirty | C3DF_Light_SPDirty | C3DF_Light_DADirty);
 	}
 }
 

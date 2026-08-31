@@ -28,6 +28,31 @@ void C3D_DirtyTexEnv(C3D_TexEnv* env);
 void C3D_TexEnvBufUpdate(int mode, int mask);
 void C3D_TexEnvBufColor(u32 color);
 
+static inline void C3D_SetTexEnvBufUpdate(u32* texEnvBuf, int mode, int mask)
+{
+	u32 val = *texEnvBuf;
+	mask &= 0xF;
+
+	if (mode & C3D_RGB)
+	{
+		val &= ~(0xF << 8);
+		val |= mask << 8;
+	}
+
+	if (mode & C3D_Alpha)
+	{
+		val &= ~(0xF << 12);
+		val |= mask << 12;
+	}
+
+	*texEnvBuf = val;
+}
+
+static inline void C3D_SetTexEnvBufColor(u32* texEnvBufClr, u32 color)
+{
+	*texEnvBufClr = color;
+}
+
 static inline void C3D_TexEnvInit(C3D_TexEnv* env)
 {
 	env->srcRgb     = GPU_TEVSOURCES(GPU_PREVIOUS, 0, 0);

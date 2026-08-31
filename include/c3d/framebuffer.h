@@ -1,5 +1,6 @@
 #pragma once
 #include "texture.h"
+#include "base.h"
 
 typedef struct
 {

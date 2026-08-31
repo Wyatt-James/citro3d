@@ -216,10 +216,10 @@ bool C3D_FrameDrawOn(C3D_RenderTarget* target)
 
 void C3D_FrameSplit(u8 flags)
 {
-	u32 *cmdBuf, cmdBufSize;
+	u32 *cmdBuf, cmdBufOffset;
 	if (!inFrame) return;
-	if (C3Di_SplitFrame(&cmdBuf, &cmdBufSize))
-		GX_ProcessCommandList(cmdBuf, cmdBufSize*4, flags);
+	if (C3Di_SplitFrame(&cmdBuf, &cmdBufOffset))
+		GX_ProcessCommandList(cmdBuf, cmdBufOffset*4, flags);
 }
 
 void C3D_FrameEnd(u8 flags)

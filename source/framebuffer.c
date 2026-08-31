@@ -42,7 +42,7 @@ void C3D_FrameBufTex(C3D_FrameBuf* fb, C3D_Tex* tex, GPU_TEXFACE face, int level
 {
 	C3D_FrameBufAttrib(fb, tex->width, tex->height, false);
 	C3D_FrameBufColor(fb, C3D_TexGetImagePtr(tex,
-		C3Di_TexIs2D(tex) ? tex->data : tex->cube->data[face], level, NULL),
+		C3D_TexIs2D(tex) ? tex->data : tex->cube->data[face], level, NULL),
 		(GPU_COLORBUF)tex->fmt);
 }
 

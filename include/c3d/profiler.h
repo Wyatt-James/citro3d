@@ -30,24 +30,23 @@
 typedef enum
 {
 	C3D_ProfilerSlot_Misc,                // A miscellaneous state. Should be set when acquiring control from external code.
-	C3D_ProfilerSlot_FrameBuf,            // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_Viewport,            // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_Scissor,             // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_Program,             // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_AttrInfo,            // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_BufInfo,             // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_Effect,              // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_TexAll,              // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_TexStatus,           // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_ProcTex,             // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_TexEnvBuf,           // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_FogLut,              // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_Gas,                 // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_TexEnvAll,           // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_LightEnv,            // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_FixedAttribDirty,    // Part of C3Di_UpdateContext
-	C3D_ProfilerSlot_UpdateUniforms,      // Called at the end of C3Di_UpdateContext and callable externally
-	C3D_ProfilerSlot_ImmediateDraw,       // The time taken for C3D_ImmediateDraw, excluding updating context
+	C3D_ProfilerSlot_FrameBuf,            // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_Viewport,            // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_Scissor,             // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_Program,             // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_AttrInfo,            // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_BufInfo,             // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_Effect,              // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_TexAll,              // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_TexStatus,           // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_ProcTex,             // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_TexEnvBuf,           // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_FogLut,              // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_Gas,                 // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_TexEnvAll,           // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_LightEnv,            // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_FixedAttribDirty,    // Part of C3D_UpdateContext
+	C3D_ProfilerSlot_UpdateUniforms,      // Called at the end of C3D_UpdateContext and callable externally
 	C3D_ProfilerSlot_DrawArrays,          // The time taken for C3D_DrawArrays, excluding updating context
 	C3D_ProfilerSlot_DrawElements,        // The time taken for C3D_DrawElements, excluding updating context
 	C3D_ProfilerSlot_Count                // Number of log slots

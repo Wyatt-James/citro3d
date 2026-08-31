@@ -64,7 +64,7 @@ bool C3D_TexInitWithParams(C3D_Tex* tex, C3D_TexCube* cube, C3D_TexInitParams p)
 {
 	if (!checkTexSize(p.width) || !checkTexSize(p.height)) return false;
 
-	bool isCube = typeIsCube(p.type);
+	bool isCube = C3D_TexTypeIsCube(p.type);
 	if (isCube && !cube) return false;
 
 	u32 size = fmtSize(p.format);
@@ -113,7 +113,7 @@ void C3D_TexLoadImage(C3D_Tex* tex, const void* data, GPU_TEXFACE face, int leve
 {
 	u32 size = 0;
 	void* out = C3D_TexGetImagePtr(tex,
-		C3Di_TexIs2D(tex) ? tex->data : tex->cube->data[face],
+		C3D_TexIs2D(tex) ? tex->data : tex->cube->data[face],
 		level, &size);
 
 	if (!addrIsVRAM(out))
@@ -163,7 +163,7 @@ void C3D_TexGenerateMipmap(C3D_Tex* tex, GPU_TEXFACE face)
 		GX_TRANSFER_IN_FORMAT(tex->fmt) | GX_TRANSFER_OUT_FORMAT(tex->fmt);
 	*/
 
-	void* src = C3Di_TexIs2D(tex) ? tex->data : tex->cube->data[face];
+	void* src = C3D_TexIs2D(tex) ? tex->data : tex->cube->data[face];
 	if (addrIsVRAM(src))
 		return; // CPU can't write to VRAM
 
@@ -241,7 +241,7 @@ void C3D_TexFlush(C3D_Tex* tex)
 
 void C3D_TexDelete(C3D_Tex* tex)
 {
-	if (C3Di_TexIs2D(tex))
+	if (C3D_TexIs2D(tex))
 		allocFree(tex->data);
 	else
 		C3Di_TexCubeDelete(tex->cube);

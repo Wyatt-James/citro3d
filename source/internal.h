@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include <c3d/base.h>
 #include <c3d/attribs.h>
 #include <c3d/buffers.h>
 #include <c3d/proctex.h>
@@ -7,32 +8,12 @@
 #include <c3d/framebuffer.h>
 #include <c3d/texenv.h>
 #include <c3d/fog.h>
+#include <c3d/effect.h>
 
 #include "internal_profiler.h"
 
 #define C3D_UNUSED __attribute__((unused))
 #define C3D_ASSUME if (!(cond)) __builtin_unreachable()
-
-typedef struct
-{
-	u32 fragOpMode;
-	u32 fragOpShadow;
-	u32 zScale, zOffset;
-	GPU_CULLMODE cullMode;
-	bool zBuffer, earlyDepth;
-	GPU_EARLYDEPTHFUNC earlyDepthFunc;
-	u32 earlyDepthRef;
-
-	// Keep the order of these
-	u32 alphaBlend;
-	GPU_LOGICOP clrLogicOp;
-	u32 blendClr;
-	u32 alphaTest;
-	u32 stencilMode;
-	u32 stencilOp;
-	u32 depthTest;
-
-} C3D_Effect;
 
 typedef struct
 {
@@ -60,11 +41,8 @@ typedef struct
 	u32 texEnvBuf, texEnvBufClr;
 	u32 fogClr;
 	C3D_FogLut* fogLut;
-
-	u16 gasAttn, gasAccMax;
-	u32 gasLightXY, gasLightZ, gasLightZColor;
-	u32 gasDeltaZ : 24;
-	u32 gasFlags : 8;
+	
+	C3D_GasConfig gasConfig;
 	C3D_GasLut* gasLut;
 
 	C3D_ProcTex* procTex;
@@ -72,8 +50,8 @@ typedef struct
 	C3D_ProcTexColorLut* procTexColorLut;
 
 	C3D_FrameBuf fb;
-	u32 viewport[5];
-	u32 scissor[3];
+	C3D_Viewport viewport;
+	C3D_Scissor scissor;
 
 	u16 fixedAttribDirty, fixedAttribEverDirty;
 	C3D_FVec fixedAttribs[12];
@@ -110,28 +88,10 @@ enum
 	C3DiF_TexEnvAll = 0x3F << 26,
 };
 
-enum
-{
-	C3DiG_BeginAcc    = BIT(0),
-	C3DiG_AccStage    = BIT(1),
-	C3DiG_SetAccMax   = BIT(2),
-	C3DiG_RenderStage = BIT(3),
-};
-
 static inline C3D_Context* C3Di_GetContext(void)
 {
 	extern C3D_Context __C3D_Context;
 	return &__C3D_Context;
-}
-
-static inline bool typeIsCube(GPU_TEXTURE_MODE_PARAM type)
-{
-	return type == GPU_TEX_CUBE_MAP || type == GPU_TEX_SHADOW_CUBE;
-}
-
-static inline bool C3Di_TexIs2D(C3D_Tex* tex)
-{
-	return !typeIsCube(C3D_TexGetType(tex));
 }
 
 static inline bool addrIsVRAM(const void* addr)
@@ -146,15 +106,13 @@ static inline vramAllocPos addrGetVRAMBank(const void* addr)
 	return vaddr < OS_VRAM_VADDR + OS_VRAM_SIZE/2 ? VRAM_ALLOC_A : VRAM_ALLOC_B;
 }
 
-void C3Di_UpdateContext(void);
-
 void C3Di_LightMtlBlend(C3D_Light* light);
 
 void C3Di_DirtyUniforms(GPU_SHADER_TYPE type);
 void C3Di_LoadShaderUniforms(shaderInstance_s* si);
 void C3Di_ClearShaderUniforms(GPU_SHADER_TYPE type);
 
-bool C3Di_SplitFrame(u32** pBuf, u32* pSize);
+bool C3Di_SplitFrame(u32** pBuf, u32* pOffset);
 
 void C3Di_RenderQueueInit(gxCmdQueue_s *queue);
 void C3Di_RenderQueueExit(void);
