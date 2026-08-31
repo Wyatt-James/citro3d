@@ -7,11 +7,11 @@
 #define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or undefined if there are none
 #define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or undefined if there are none
 
-C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
-C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT];
-u16      C3D_BoolUnifs[2];
+C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT] C3D_ALIGNED(32);
+C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT] C3D_ALIGNED(32);
 
-u32  C3D_FVUnifDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH]; // 96-bit bitfield
+u32  C3D_FVUnifDirty[2][C3D_FVUNIF_DIRTY_ARRAY_LENGTH] C3D_ALIGNED(32); // 96-bit bitfield
+u16  C3D_BoolUnifs[2];
 u8   C3D_IVUnifDirty[2]; // 4-bit bitfield
 bool C3D_BoolUnifsDirty[2];
 
