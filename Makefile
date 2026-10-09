@@ -33,6 +33,7 @@ INCLUDES	:=	include
 ENABLE_PROFILER	:=	0
 ENABLE_LTO	:=	0
 GPUCMD_DISABLE_BOUNDS_CHECKS	:=	0
+GPUCMD_ASSUME_WRITES_ALIGNED	:=	0
 GPUCMD_ENABLE_ZERO_PADDING	:=	0
 GPUCMD_INLINE_THRESH	:=	6
 
@@ -55,6 +56,15 @@ $(info GPUCMD bounds checks are disabled.)
 CFLAGS	+=	-DGPUCMD_DISABLE_BOUNDS_CHECKS
 else
 $(info GPUCMD bounds checks are enabled.)
+endif
+
+# If enabled, the GPU driver will assume that the GPUCMD buffer
+# and its offset are always 8-byte aligned.
+ifeq ($(GPUCMD_ASSUME_WRITES_ALIGNED),1)
+$(info GPUCMD writes are assumed aligned.)
+CFLAGS	+=	-DGPUCMD_ASSUME_WRITES_ALIGNED
+else
+$(info GPUCMD writes are assumed unaligned.)
 endif
 
 # If enabled, GPU commands of odd lengths will be padded with zeros. If disabled, the padding is undefined.
