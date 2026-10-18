@@ -6,7 +6,7 @@
 #define C3D_IVUNIF_COUNT 4
 
 #define C3D_SET_LSB(num_bits_) ((1ULL << (num_bits_)) - 1)         						 // Sets N least significant bits.
-#define C3D_SET_MSB(siz_, num_bits_) ((~0ULL << (siz_ - num_bits_)) & C3D_SET_LSB(siz_)) // Sets N most significant bits of an N-bit number.
+#define C3D_SET_MSB(siz_, num_bits_) ((~0ULL << (siz_ - (num_bits_))) & C3D_SET_LSB(siz_)) // Sets N most significant bits of an N-bit number.
 #define C3D_FVUNIF_DIRTY_ARRAY_LENGTH 3
 
 extern C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT];
@@ -24,15 +24,15 @@ static inline void C3D_RegDirty(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	const u32 highest_word = (id + size - 1) / 32;
 
 	if (lowest_word == highest_word)
-		bitfield[lowest_word] |= (C3D_SET_LSB(size) << (id - lowest_word * 32));
+		bitfield[lowest_word] |= (C3D_SET_MSB(32, size) >> (id - lowest_word * 32));
 	else
 		for (u32 w = lowest_word; w <= highest_word; w++) {
 			if (w == lowest_word)
-				bitfield[w] |= C3D_SET_MSB(32, (32 - id) - (w * 32));   // Set upper bits of lowest word
+				bitfield[w] |= C3D_SET_LSB((32 - id) - (w * 32));   	// Set lower bits of lowest word
 			else if (w == highest_word)
-				bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
+				bitfield[w] |= C3D_SET_MSB(32, (id + size) - (w * 32)); // Set upper bits of highest word
 			else
-				bitfield[w] = ~0;                           // Fill intermediate words completely
+				bitfield[w] = ~0;                           			// Fill intermediate words completely
 		}
 }
 
@@ -43,15 +43,15 @@ static inline void C3D_RegClean(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	const u32 highest_word = (id + size - 1) / 32;
 
 	if (lowest_word == highest_word)
-		bitfield[lowest_word] &= ~(C3D_SET_LSB(size) << (id - lowest_word * 32));
+		bitfield[lowest_word] &= ~(C3D_SET_MSB(32, size) >> (id - lowest_word * 32));
 	else
 		for (u32 w = lowest_word; w <= highest_word; w++) {
 			if (w == lowest_word)
-				bitfield[w] &= ~C3D_SET_MSB(32, (32 - id) - (w * 32));   // Clear upper bits of lowest word
+				bitfield[w] &= ~C3D_SET_LSB((32 - id) - (w * 32));   	 // Clear lower bits of lowest word
 			else if (w == highest_word)
-				bitfield[w] &= ~C3D_SET_LSB(id + size - w * 32); // Clear lower bits of highest word
+				bitfield[w] &= ~C3D_SET_MSB(32, (id + size) - (w * 32)); // Clear upper bits of highest word
 			else
-				bitfield[w] = 0;                             // Zero intermediate words completely
+				bitfield[w] = 0;                             			 // Zero intermediate words completely
 		}
 }
 
