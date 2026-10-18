@@ -28,7 +28,7 @@ static inline void C3D_RegDirty(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	else
 		for (u32 w = lowest_word; w <= highest_word; w++) {
 			if (w == lowest_word)
-				bitfield[w] |= C3D_SET_MSB(32, id - w * 32);   // Set upper bits of lowest word
+				bitfield[w] |= C3D_SET_MSB(32, (32 - id) - (w * 32));   // Set upper bits of lowest word
 			else if (w == highest_word)
 				bitfield[w] |= C3D_SET_LSB(id + size - w * 32); // Set lower bits of highest word
 			else
@@ -47,7 +47,7 @@ static inline void C3D_RegClean(u32 bitfield[C3D_FVUNIF_DIRTY_ARRAY_LENGTH], int
 	else
 		for (u32 w = lowest_word; w <= highest_word; w++) {
 			if (w == lowest_word)
-				bitfield[w] &= ~C3D_SET_MSB(32, id - w * 32);   // Clear upper bits of lowest word
+				bitfield[w] &= ~C3D_SET_MSB(32, (32 - id) - (w * 32));   // Clear upper bits of lowest word
 			else if (w == highest_word)
 				bitfield[w] &= ~C3D_SET_LSB(id + size - w * 32); // Clear lower bits of highest word
 			else
