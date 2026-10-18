@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define NUM_TRAILING_ONES(val_)  __builtin_clzl(~(val_)) // number of trailing 1-bits, or undefined if there are none. Practically, that returns -1.
-#define NUM_TRAILING_ZEROS(val_) __builtin_clzl(val_)    // number of trailing 0-bits, or undefined if there are none. Practically, that returns -1.
+#define NUM_LEADING_ONES(val_)  __builtin_clzl(~(val_)) // number of leading 1-bits, or undefined if there are none. Practically, that returns -1.
+#define NUM_LEADING_ZEROS(val_) __builtin_clzl(val_)    // number of leading 0-bits, or undefined if there are none. Practically, that returns -1.
 #define UNLIKELY(cond_)          __builtin_expect(!!(cond_), 0)
 #define LIKELY(cond_)            __builtin_expect(!!(cond_), 1)
 
@@ -49,8 +49,8 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 
 		do {
 			// First bit is set: dirty reg
-			const u32 dirty_regs = (bits == ~0) ? 32 : NUM_TRAILING_ONES(bits); // passing ~0 ends up returning ~0
-			bits >>= dirty_regs;
+			const u32 dirty_regs = (bits == ~0) ? 32 : NUM_LEADING_ONES(bits); // passing ~0 ends up returning ~0
+			bits <<= dirty_regs;
 			
 			const u32 first_dirty = (word * 32) + regs_this_word;
 			const u32 next_clean = first_dirty + dirty_regs;
@@ -61,8 +61,8 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 do_zeros:
 			// First bit is clear: clean reg
 			// If the word is empty, we'll exit the loop anyway
-			const u32 clean_regs = NUM_TRAILING_ZEROS(bits);
-			bits >>= clean_regs;
+			const u32 clean_regs = NUM_LEADING_ZEROS(bits);
+			bits <<= clean_regs;
 			regs_this_word += clean_regs;
 		} while (bits);
 	}
