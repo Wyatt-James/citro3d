@@ -4,8 +4,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or undefined if there are none
-#define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or undefined if there are none
+#define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or -1 if there are none
+#define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or -1 if there are none
+#define UNLIKELY(cond_)          __builtin_expect(!!(cond_), 0)
+#define LIKELY(cond_)            __builtin_expect(!!(cond_), 1)
 
 C3D_FVec C3D_FVUnif[2][C3D_FVUNIF_COUNT] C3D_ALIGNED(32);
 C3D_IVec C3D_IVUnif[2][C3D_IVUNIF_COUNT] C3D_ALIGNED(32);
@@ -28,7 +30,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	int i = 0;
 
 	// Update FVec uniforms that come from shader constants
-	if (C3Di_ShaderFVecData[type].dirty)
+	if (UNLIKELY(C3Di_ShaderFVecData[type].dirty))
 	{
 		for (i = 0; i < C3Di_ShaderFVecData[type].count; i++)
 		{
@@ -123,7 +125,7 @@ void C3Di_LoadShaderUniforms(shaderInstance_s* si)
 			}
 		}
 	}
-	C3Di_ShaderFVecData[type].dirty = true;
+	C3Di_ShaderFVecData[type].dirty = si->numFloat24Uniforms != 0;
 	C3Di_ShaderFVecData[type].count = si->numFloat24Uniforms;
 	C3Di_ShaderFVecData[type].data = si->float24Uniforms;
 }
