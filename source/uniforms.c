@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define NUM_TRAILING_ONES(val_)  __builtin_ctzl(~(val_)) // number of trailing 1-bits, or -1 if there are none
-#define NUM_TRAILING_ZEROS(val_) __builtin_ctzl(val_)    // number of trailing 0-bits, or -1 if there are none
+#define NUM_TRAILING_ONES(val_)  __builtin_clzl(~(val_)) // number of trailing 1-bits, or undefined if there are none. Practically, that returns -1.
+#define NUM_TRAILING_ZEROS(val_) __builtin_clzl(val_)    // number of trailing 0-bits, or undefined if there are none. Practically, that returns -1.
 #define UNLIKELY(cond_)          __builtin_expect(!!(cond_), 0)
 #define LIKELY(cond_)            __builtin_expect(!!(cond_), 1)
 
@@ -45,25 +45,26 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 	for (u32 word = 0; word < C3D_FVUNIF_DIRTY_ARRAY_LENGTH; word++) {
 		u32 regs_this_word = 0;
 		u32 bits = C3D_FVUnifDirty[type][word];
-		while (bits) {
-			if (bits & 0b1) // First bit is set: dirty reg
-			{
-				const u32 dirty_regs = (bits == ~0) ? 32 : NUM_TRAILING_ONES(bits); // passing ~0 ends up returning ~0
-				bits >>= dirty_regs;
-				
-				const u32 first_dirty = (word * 32) + regs_this_word;
-				const u32 next_clean = first_dirty + dirty_regs;
-				
-				C3D_SendFVUnifs(offset, first_dirty, &C3D_FVUnif[type][first_dirty], next_clean - first_dirty);
-				regs_this_word += dirty_regs;
-			}
-			else // First bit is clear: clean reg
-			{
-				const u32 clean_regs = NUM_TRAILING_ZEROS(bits);
-				bits >>= clean_regs;
-				regs_this_word += clean_regs;
-			}
-		}
+		goto do_zeros; // Handle leading zeros first
+
+		do {
+			// First bit is set: dirty reg
+			const u32 dirty_regs = (bits == ~0) ? 32 : NUM_TRAILING_ONES(bits); // passing ~0 ends up returning ~0
+			bits >>= dirty_regs;
+			
+			const u32 first_dirty = (word * 32) + regs_this_word;
+			const u32 next_clean = first_dirty + dirty_regs;
+			
+			C3D_SendFVUnifs(offset, first_dirty, &C3D_FVUnif[type][first_dirty], next_clean - first_dirty);
+			regs_this_word += dirty_regs;
+
+do_zeros:
+			// First bit is clear: clean reg
+			// If the word is empty, we'll exit the loop anyway
+			const u32 clean_regs = NUM_TRAILING_ZEROS(bits);
+			bits >>= clean_regs;
+			regs_this_word += clean_regs;
+		} while (bits);
 	}
 
 	// Clear the dirty flags
