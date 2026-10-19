@@ -46,7 +46,7 @@ void C3D_UpdateUniforms(GPU_SHADER_TYPE type)
 		u32 regs_this_word = 0;
 		u32 bits = C3D_FVUnifDirty[type][word];
 		while (bits) {
-			if (bits & 0b1) // First bit is set: dirty reg
+			if (bits & BIT(31)) // First bit is set: dirty reg
 			{
 				const u32 dirty_regs = (bits == ~0) ? 32 : NUM_LEADING_ONES(bits); // passing ~0 ends up returning ~0
 				bits <<= dirty_regs;
