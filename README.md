@@ -31,6 +31,11 @@ list to reduce blocking during command list creation. Feature by derrekr.
   If 0, the GPU driver will avoid exceeding the bounds of its buffer.
   If 1, this functionality is disabled. Disabling this can cause memory
   corruption if the buffer is not large enough! See Footnote 1.
+  - `GPUCMD_ASSUME_WRITES_ALIGNED (Default 0)`: If enabled, the GPU
+  driver will assume that the GPUCMD buffer and its offset are always
+  8-byte aligned. Enabling this can improve performance but may crash
+  the 3DS is an incorrect alignment is used, depending on what GCC
+  decides to compile.
   - `GPUCMD_ENABLE_ZERO_PADDING (Default: 0)`:
   If 1, the GPU driver will pad odd-sized GPU commands with zeroes,
   mirroring stock libctru behavior. If 0, commands are still aligned,
