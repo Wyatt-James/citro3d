@@ -137,10 +137,3 @@ void C3Di_ClearShaderUniforms(GPU_SHADER_TYPE type)
 	C3Di_ShaderFVecData[type].count = 0;
 	C3Di_ShaderFVecData[type].data = NULL;
 }
-
-u32 buttfield[3];
-void a()
-{
-	C3D_RegDirty(buttfield, 31, 32+2);
-	// ((C3D_SET_MSB(32, 31)) >> (0 - 0 * 32))
-}
