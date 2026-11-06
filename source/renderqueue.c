@@ -9,6 +9,10 @@ static C3D_RenderTarget *linkedTarget[3];
 
 static TickCounter gpuTime, cpuTime;
 
+static s64 gxTimeoutDuration = -1; // -1 disables the hook because it will never time out.
+static void (* gxTimeoutCb)(void*);
+static void* gxTimeoutCbData;
+
 static bool inFrame, inSafeTransfer, measureGpuTime;
 static bool needSwapTop, needSwapBot, isTopStereo;
 static float framerate = 60.0f;
@@ -90,25 +94,41 @@ u32 C3D_FrameCounter(int id)
 	return frameCounter[id];
 }
 
-static bool C3Di_WaitAndClearQueue(s64 timeout)
+#define TIMEOUT_WAIT true // Wait until the queue is done and callback if the timer expires
+#define TIMEOUT_NO_WAIT false // Finalize the queue if it's finished but don't wait or callback
+
+// If wait is true, the queue is guaranteed to finish and this function returns true or hangs. The hook may be called.
+// If wait is false, the queue will be finalized if it's finished, otherwise false is returned. The hook will not be called.
+static bool C3Di_WaitAndClearQueuePtr(gxCmdQueue_s* queue, bool wait)
 {
-	gxCmdQueue_s* queue = C3Di_GetContext()->gxQueue;
-	if (!gxCmdQueueWait(queue, timeout))
-		return false;
+	s64 duration = wait ? gxTimeoutDuration : 0;
+
+	if (!gxCmdQueueWait(queue, duration)) {
+		if (!wait)
+			return false; // If we're just checking, just return the result.
+		
+		// If we're waiting, we timed out, so call the callback. Then, wait forever.
+		if (gxTimeoutCb)
+			gxTimeoutCb(gxTimeoutCbData);
+		gxCmdQueueWait(queue, -1);
+	}
+
 	gxCmdQueueStop(queue);
 	gxCmdQueueClear(queue);
 	return true;
 }
 
-static bool C3Di_WaitAndClearOtherQueue(s64 timeout)
+static bool C3Di_WaitAndClearQueue(bool wait)
+{
+	gxCmdQueue_s* queue = C3Di_GetContext()->gxQueue;
+	return C3Di_WaitAndClearQueuePtr(queue, wait);
+}
+
+static bool C3Di_WaitAndClearOtherQueue(bool wait)
 {
 	C3D_Context *ctx = C3Di_GetContext();
 	gxCmdQueue_s *other  = &ctx->gxQueues[(ctx->curCmdBufIndex + 1) % 2];
-
-	gxCmdQueueWait(other, timeout);
-	gxCmdQueueStop(other);
-	gxCmdQueueClear(other);
-	return true;
+	return C3Di_WaitAndClearQueuePtr(other, wait);
 }
 
 void C3Di_RenderQueueEnableVBlank(void)
@@ -137,7 +157,7 @@ void C3Di_RenderQueueExit(void)
 	int i;
 	C3D_RenderTarget *a, *next;
 
-	C3Di_WaitAndClearQueue(-1);
+	C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	gxCmdQueueSetCallback(C3Di_GetContext()->gxQueue, NULL, NULL);
 	GX_BindQueue(NULL);
 
@@ -158,8 +178,8 @@ void C3Di_RenderQueueWaitDone(void)
 	C3D_Context* ctx = C3Di_GetContext();
 
 	if (ctx->flags & C3DiF_DoubleBuf)
-		C3Di_WaitAndClearOtherQueue(-1);
-	C3Di_WaitAndClearQueue(-1);
+		C3Di_WaitAndClearOtherQueue(TIMEOUT_WAIT);
+	C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 }
 
 void C3Di_SwapQueuesAndCmdBuf(void)
@@ -195,7 +215,7 @@ bool C3D_FrameBegin(u8 flags)
 	if ((ctx->flags & C3DiF_DoubleBuf) && !(flags & C3D_FRAME_NONDOUBLEBUF)) {
 		C3Di_SwapQueuesAndCmdBuf();
 	}
-	else if (!C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? 0 : -1))
+	else if (!C3Di_WaitAndClearQueue((flags & C3D_FRAME_NONBLOCK) ? TIMEOUT_NO_WAIT : TIMEOUT_WAIT))
 		return false;
 
 	inFrame = true;
@@ -264,7 +284,7 @@ void C3D_FrameEnd(u8 flags)
 	}
 
 	if (ctx->flags & C3DiF_DoubleBuf)
-		C3Di_WaitAndClearOtherQueue(-1);
+		C3Di_WaitAndClearOtherQueue(TIMEOUT_WAIT);
 
 	measureGpuTime = true;
 	osTickCounterStart(&gpuTime);
@@ -276,6 +296,23 @@ void C3D_FrameEndHook(void (* hook)(void*), void* param)
 	frameEndCb = hook;
 	frameEndCbData = param;
 }
+
+void C3D_TimeoutHook(void (* hook)(void*), void* param)
+{
+	gxTimeoutCb = hook;
+	gxTimeoutCbData = param;
+}
+
+s64 C3D_GetTimeoutDuration(void)
+{
+	return gxTimeoutDuration;
+}
+
+void C3D_SetTimeoutDuration(s64 timeout)
+{
+	gxTimeoutDuration = timeout;
+}
+
 
 float C3D_GetDrawingTime(void)
 {
@@ -393,7 +430,7 @@ void C3D_RenderTargetDelete(C3D_RenderTarget* target)
 	if (target->linked)
 		C3D_RenderTargetDetachOutput(target);
 	else
-		C3Di_WaitAndClearQueue(-1);
+		C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	C3Di_RenderTargetDestroy(target);
 }
 
@@ -406,7 +443,7 @@ void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx
 	{
 		linkedTarget[id]->linked = false;
 		if (!inFrame)
-			C3Di_WaitAndClearQueue(-1);
+			C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	}
 	linkedTarget[id] = target;
 	if (target)
@@ -420,7 +457,7 @@ void C3D_RenderTargetSetOutput(C3D_RenderTarget* target, gfxScreen_t screen, gfx
 
 static void C3Di_SafeDisplayTransfer(u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 flags)
 {
-	C3Di_WaitAndClearQueue(-1);
+	C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	inSafeTransfer = true;
 	GX_DisplayTransfer(inadr, indim, outadr, outdim, flags);
 	gxCmdQueueRun(C3Di_GetContext()->gxQueue);
@@ -428,7 +465,7 @@ static void C3Di_SafeDisplayTransfer(u32* inadr, u32 indim, u32* outadr, u32 out
 
 static void C3Di_SafeTextureCopy(u32* inadr, u32 indim, u32* outadr, u32 outdim, u32 size, u32 flags)
 {
-	C3Di_WaitAndClearQueue(-1);
+	C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	inSafeTransfer = true;
 	GX_TextureCopy(inadr, indim, outadr, outdim, size, flags);
 	gxCmdQueueRun(C3Di_GetContext()->gxQueue);
@@ -436,7 +473,7 @@ static void C3Di_SafeTextureCopy(u32* inadr, u32 indim, u32* outadr, u32 outdim,
 
 static void C3Di_SafeMemoryFill(u32* buf0a, u32 buf0v, u32* buf0e, u16 control0, u32* buf1a, u32 buf1v, u32* buf1e, u16 control1)
 {
-	C3Di_WaitAndClearQueue(-1);
+	C3Di_WaitAndClearQueue(TIMEOUT_WAIT);
 	inSafeTransfer = true;
 	GX_MemoryFill(buf0a, buf0v, buf0e, control0, buf1a, buf1v, buf1e, control1);
 	gxCmdQueueRun(C3Di_GetContext()->gxQueue);

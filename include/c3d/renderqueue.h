@@ -39,6 +39,12 @@ void C3D_FrameEnd(u8 flags);
 
 void C3D_FrameEndHook(void (* hook)(void*), void* param);
 
+// Time in nanoseconds to wait for the GPU before it should be considered hung,
+// or -1 to disable. Upon timeout, the hook is called synchronously. Defaults to -1.
+void C3D_TimeoutHook(void (* hook)(void*), void* param);
+s64 C3D_GetTimeoutDuration(void); 
+void C3D_SetTimeoutDuration(s64 timeout);
+
 float C3D_GetDrawingTime(void);
 float C3D_GetProcessingTime(void);
 
