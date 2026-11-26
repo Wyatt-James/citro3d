@@ -174,12 +174,13 @@ void C3D_UpdateContext(void)
 
 	int i;
 	C3D_Context* ctx = C3Di_GetContext();
-	const u32 flags = ctx->flags;
+	u32 flags = ctx->flags;
 
 	if (flags & C3DiF_FrameBuf)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_FrameBuf);
 		C3D_SendFrameBuf(&ctx->fb, (flags & C3DiF_DrawUsed) != 0);
+		flags &= ~C3DiF_DrawUsed;
 		C3Di_Profile_Exit_Block();
 	}
 
@@ -273,6 +274,12 @@ void C3D_UpdateContext(void)
 	if (flags & C3DiF_TexEnvBuf)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexEnvBuf);
+		if (flags & C3DiF_DrawUsed) // Seems to be required for fog
+		{
+            GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+            GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
+            GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
+		}
 		C3D_SendTexEnvBuf(ctx->texEnvBuf, ctx->texEnvBufClr, ctx->fogClr, C3DF_TEXENVBUF_ALL);
 		C3Di_Profile_Exit_Block();
 	}
