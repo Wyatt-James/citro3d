@@ -167,12 +167,6 @@ void C3D_SetScissor(GPU_SCISSORMODE mode, u32 left, u32 top, u32 right, u32 bott
 	C3D_SetScissorVal(&ctx->scissor, mode, left, top, right, bottom);
 }
 
-static void (*fogHook) (_Bool);
-void C3D_SetFogHook(void (*func) (_Bool))
-{
-	fogHook = func;
-}
-
 void C3D_UpdateContext(void)
 {
 	C3Di_GetProfiler()->log_slot_skipped = false;
@@ -280,13 +274,10 @@ void C3D_UpdateContext(void)
 	if (flags & C3DiF_TexEnvBuf)
 	{
 		C3Di_Profile_Enter_Block(C3D_ProfilerSlot_TexEnvBuf);
-		fogHook((flags & C3DiF_DrawUsed) != 0);
-		// if (flags & C3DiF_DrawUsed) // Seems to be required for fog
-		// {
-        //     GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
-        //     GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_INVALIDATE, 1);
-        //     GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
-		// }
+		if (flags & C3DiF_DrawUsed) // Seems to be required for fog
+		{
+            GPUCMD_AddWrite(GPUREG_FRAMEBUFFER_FLUSH, 1);
+		}
 		C3D_SendTexEnvBuf(ctx->texEnvBuf, ctx->texEnvBufClr, ctx->fogClr, C3DF_TEXENVBUF_ALL);
 		C3Di_Profile_Exit_Block();
 	}

@@ -37,7 +37,6 @@ bool C3D_Init(size_t cmdBufSize);
 void C3D_Fini(void);
 
 float C3D_GetCmdBufUsage(void);
-void C3D_SetFogHook(void (*func) (_Bool));
 
 void C3D_BindProgram(shaderProgram_s* program);
 
