@@ -390,10 +390,7 @@ bool C3Di_SplitFrame(u32** pBuf, u32* pOffset)
 {
 	C3D_Context* ctx = C3Di_GetContext();
 
-	u32 gpuCmdBufOffset;
-	GPUCMD_GetBuffer(NULL, NULL, &gpuCmdBufOffset);
-
-	if (!gpuCmdBufOffset)
+	if (!GPUCMD_GetOffset())
 		return false; // Nothing was drawn
 
 	if (ctx->flags & C3DiF_DrawUsed)
@@ -404,7 +401,7 @@ bool C3Di_SplitFrame(u32** pBuf, u32* pOffset)
 		GPUCMD_AddWrite(GPUREG_EARLYDEPTH_CLEAR, 1);
 	}
 
-	GPUCMD_GetBuffer(NULL, &lastCmdBuffer.size, NULL); // Grab before split
+	lastCmdBuffer.size = GPUCMD_GetSize(); // Grab before split
 
 	GPUCMD_Split(pBuf, pOffset);
 
